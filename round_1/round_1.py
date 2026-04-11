@@ -3,6 +3,14 @@ from typing import List
 from numpy import mean, std
 import string
 
+def get_position_limits():
+    POSITION_LIMITS = {
+        "EMERALDS": 80,
+        "TOMATOES": 80
+    }
+    
+    return POSITION_LIMITS
+
 class Product:
     def __init__(self, name, sell_order_history, buy_order_history, current_position):
         # Name
@@ -30,8 +38,8 @@ class Product:
         # Default buy and sell thresholds
         self.default_offset = self.calculate_offset(10, 3)
         self.current_offset = self.default_offset
-        self.acceptable_buy_price = self.average_mid_price - self.default_offset
-        self.acceptable_sell_price = self.average_mid_price + self.default_offset
+        self.acceptable_buy_price = self.average_mid_price - self.current_offset
+        self.acceptable_sell_price = self.average_mid_price + self.current_offset
     
     def calculate_offset(self, range, divisor=3):
         if len(self.sell_order_history) == 0:
@@ -230,7 +238,7 @@ def make_empty_position_dictionary(products):
     
     return position_dictionary
 
-def initialize_product_information(products, sell_order_history, buy_order_history, current_positions, observation_info_history, current_observation_info):
+def initialize_product_information(products, sell_order_history, buy_order_history, current_positions, observation_info_history, current_observation_info=None):
     product_info = {}
     for product in products:
         if product == "MAGNIFICENT_MACARONS":
@@ -250,29 +258,29 @@ def initialize_product_information(products, sell_order_history, buy_order_histo
     product_info["PICNIC_BASKET2"].set_acceptable_buy_price(croissants + jams)
     product_info["PICNIC_BASKET2"].set_acceptable_sell_price(croissants + jams) """
 
-    croissants = product_info["CROISSANTS"].get_recent_mid_price(10) * 6
-    jams = product_info["JAMS"].get_recent_mid_price(10) * 3
-    djembe = product_info["DJEMBES"].get_recent_mid_price(10)
-    product_info["PICNIC_BASKET1"].set_acceptable_buy_price(croissants + jams + djembe)
-    product_info["PICNIC_BASKET1"].set_acceptable_sell_price(croissants + jams + djembe)
+    # croissants = product_info["CROISSANTS"].get_recent_mid_price(10) * 6
+    # jams = product_info["JAMS"].get_recent_mid_price(10) * 3
+    # djembe = product_info["DJEMBES"].get_recent_mid_price(10)
+    # product_info["PICNIC_BASKET1"].set_acceptable_buy_price(croissants + jams + djembe)
+    # product_info["PICNIC_BASKET1"].set_acceptable_sell_price(croissants + jams + djembe)
 
-    croissants = product_info["CROISSANTS"].get_recent_mid_price(10) * 4
-    jams = product_info["JAMS"].get_recent_mid_price(10) * 2
-    product_info["PICNIC_BASKET2"].set_acceptable_buy_price(croissants + jams)
-    product_info["PICNIC_BASKET2"].set_acceptable_sell_price(croissants + jams)
+    # croissants = product_info["CROISSANTS"].get_recent_mid_price(10) * 4
+    # jams = product_info["JAMS"].get_recent_mid_price(10) * 2
+    # product_info["PICNIC_BASKET2"].set_acceptable_buy_price(croissants + jams)
+    # product_info["PICNIC_BASKET2"].set_acceptable_sell_price(croissants + jams)
 
     # Manual offset adjustments
-    product_info["RAINFOREST_RESIN"].set_buy_price_offset(0)
-    product_info["RAINFOREST_RESIN"].set_sell_price_offset(0)
+    product_info["EMERALDS"].set_buy_price_offset(-10)
+    product_info["EMERALDS"].set_sell_price_offset(0)
 
-    product_info["KELP"].set_buy_price_offset(0)
-    product_info["KELP"].set_sell_price_offset(3)
+    # product_info["KELP"].set_buy_price_offset(0)
+    # product_info["KELP"].set_sell_price_offset(3)
 
-    product_info["SQUID_INK"].set_buy_price_offset(-1)
+    # product_info["SQUID_INK"].set_buy_price_offset(-1)
 
-    product_info["CROISSANTS"].set_buy_price_offset(-4)
-    product_info["DJEMBES"].set_buy_price_offset(-4)
-    product_info["JAMS"].set_buy_price_offset(-4)
+    # product_info["CROISSANTS"].set_buy_price_offset(-4)
+    # product_info["DJEMBES"].set_buy_price_offset(-4)
+    # product_info["JAMS"].set_buy_price_offset(-4)
 
     #product_info["PICNIC_BASKET1"].set_buy_price_offset(-5)
     #product_info["PICNIC_BASKET1"].set_sell_price_offset(product_info["PICNIC_BASKET1"].default_offset)
@@ -282,27 +290,6 @@ def initialize_product_information(products, sell_order_history, buy_order_histo
 
     # Return the products' information
     return product_info
-
-def get_position_limits():
-    POSITION_LIMITS = {
-            "RAINFOREST_RESIN": 50,
-            "KELP": 50,
-            "SQUID_INK": 50,
-            "CROISSANTS": 250,
-            "JAMS": 350,
-            "DJEMBES": 60,
-            "PICNIC_BASKET1": 60,
-            "PICNIC_BASKET2": 100,
-            "VOLCANIC_ROCK": 400,
-            "VOLCANIC_ROCK_VOUCHER_9500": 200,
-            "VOLCANIC_ROCK_VOUCHER_9750": 200,
-            "VOLCANIC_ROCK_VOUCHER_10000": 200,
-            "VOLCANIC_ROCK_VOUCHER_10250": 200,
-            "VOLCANIC_ROCK_VOUCHER_10500": 200,
-            "MAGNIFICENT_MACARONS": 75
-        }
-    
-    return POSITION_LIMITS
 
 def get_orders(s):
     s = s.strip("{}")
@@ -470,24 +457,14 @@ def update_buy_order_history(history, product, new_addition):
 
 class Trader:
     def run(self, state: TradingState):
-        PRODUCT_NAMES = ["RAINFOREST_RESIN",
-                         "KELP",
-                         "SQUID_INK",
-                         "CROISSANTS",
-                         "DJEMBES",
-                         "JAMS",
-                         "PICNIC_BASKET1",
-                         "PICNIC_BASKET2",
-                         "VOLCANIC_ROCK",
-                         "VOLCANIC_ROCK_VOUCHER_9500",
-                         "VOLCANIC_ROCK_VOUCHER_9750",
-                         "VOLCANIC_ROCK_VOUCHER_10000",
-                         "VOLCANIC_ROCK_VOUCHER_10250",
-                         "VOLCANIC_ROCK_VOUCHER_10500",
-                         "MAGNIFICENT_MACARONS"]
+        PRODUCT_NAMES = ["EMERALDS",
+                         "TOMATOES"]
 
-        POSITION_LIMITS = get_position_limits()
-        
+        POSITION_LIMITS = {
+            "EMERALDS": 80,
+            "TOMATOES": 80
+        }
+
         MACARON_INFO = ["askPrice",
                         "bidPrice",
                         "exportTariff",
@@ -511,18 +488,18 @@ class Trader:
         if state.traderData != "":
             sell_order_history, buy_order_history, current_positions, previous_macaron_information = convert_trading_data(state.traderData)
         
-        macaron_state = state.observations.conversionObservations["MAGNIFICENT_MACARONS"]
-        print(f"WE'RE BREATHING SUNLIGHTTT {macaron_state.sunlightIndex}")
+        # macaron_state = state.observations.conversionObservations["MAGNIFICENT_MACARONS"]
+        # print(f"WE'RE BREATHING SUNLIGHTTT {macaron_state.sunlightIndex}")
 
-        products = initialize_product_information(PRODUCT_NAMES, sell_order_history, buy_order_history, current_positions, previous_macaron_information, macaron_state)
+        products = initialize_product_information(PRODUCT_NAMES, sell_order_history, buy_order_history, current_positions, previous_macaron_information, None)
         
-        previous_macaron_information["askPrice"].append(macaron_state.askPrice)
-        previous_macaron_information["bidPrice"].append(macaron_state.bidPrice)
-        previous_macaron_information["exportTariff"].append(macaron_state.exportTariff)
-        previous_macaron_information["importTariff"].append(macaron_state.importTariff)
-        previous_macaron_information["sugarPrice"].append(macaron_state.sugarPrice)
-        previous_macaron_information["sunlightIndex"].append(macaron_state.sunlightIndex)
-        previous_macaron_information["transportFees"].append(macaron_state.transportFees)
+        # previous_macaron_information["askPrice"].append(macaron_state.askPrice)
+        # previous_macaron_information["bidPrice"].append(macaron_state.bidPrice)
+        # previous_macaron_information["exportTariff"].append(macaron_state.exportTariff)
+        # previous_macaron_information["importTariff"].append(macaron_state.importTariff)
+        # previous_macaron_information["sugarPrice"].append(macaron_state.sugarPrice)
+        # previous_macaron_information["sunlightIndex"].append(macaron_state.sunlightIndex)
+        # previous_macaron_information["transportFees"].append(macaron_state.transportFees)
 
         # Orders to be placed on exchange matching engine
         result = {}
@@ -546,7 +523,7 @@ class Trader:
 
             # Skip the first iteration of trading, also tariffs are scary (boo) (oh no) (spooky)
             #if state.traderData == "" or product == "MAGNIFICENT_MACARONS":
-            if state.traderData == "":
+            if state.traderData == "" or product != "EMERALDS":
                 #print("First iteration, will not do any trading")
                 if len(order_depth.sell_orders) != 0:
                     best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
@@ -558,10 +535,7 @@ class Trader:
             
             # Get the current position of the product
             position = products[product].position
-            #print(f"Current position: {position}")
-            
-            # Initialize the product class
-            #Rainforest_Resin = Product("RAINFOREST_RESIN", sell_order_history["RAINFOREST_RESIN", ])
+            print(f"Current position: {position}")
 
             # Make a list of orders
             orders: List[Order] = []
@@ -572,9 +546,7 @@ class Trader:
 
             print(f"Acceptable buy price: {acceptable_buy_price}")
             print(f"Acceptable sell price: {acceptable_sell_price}")
-
-            # I guess... how many buy and sell orders?
-            #print(f"Buy Order depth: {len(order_depth.buy_orders)}, Sell order depth: {len(order_depth.sell_orders)}")
+            print(f"Buy Order depth: {len(order_depth.buy_orders)}, Sell order depth: {len(order_depth.sell_orders)}")
 
             # Make conditions (for a crash or not) in which we would want to sell everything
             best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
@@ -586,35 +558,35 @@ class Trader:
             # Condition 3: Sell order of PICNIC_BASKET1 and PICNIC_BASKET2 is a slightly higher than a recent average (small-dip checker)
             # Condition 4: Sell order of DJEMBES is a slightly higher than a recent average (small-dip checker)
             # Either needs to be true for us to sell everything
-            condition_one = big_dip_checker(products[product].sell_order_history, products[product].buy_order_history, mid_price, 1.10)
-            condition_two = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 20, mid_price, 1.07)
-            condition_three = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 10, mid_price, 1.10) and (product in ["PICNIC_BASKET1", "PICNIC_BASKET2"])
-            condition_four = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 40, mid_price, 1.10) and (product == "DJEMBES")
+            # condition_one = big_dip_checker(products[product].sell_order_history, products[product].buy_order_history, mid_price, 1.10)
+            # condition_two = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 20, mid_price, 1.07)
+            # condition_three = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 10, mid_price, 1.10) and (product in ["PICNIC_BASKET1", "PICNIC_BASKET2"])
+            # condition_four = small_dip_checker(products[product].sell_order_history, products[product].buy_order_history, 40, mid_price, 1.10) and (product == "DJEMBES")
 
-            if (condition_one or condition_two or condition_three or condition_four):
-                print("I'M GOING TO CRASH OUT !!!")
-                update_sell_order_history(sell_order_history, product, best_ask)
+            # if (condition_one or condition_two or condition_three or condition_four):
+            #     print("I'M GOING TO CRASH OUT !!!")
+            #     update_sell_order_history(sell_order_history, product, best_ask)
 
-                best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
-                update_buy_order_history(buy_order_history, product, best_bid)
+            #     best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
+            #     update_buy_order_history(buy_order_history, product, best_bid)
 
-                # Sell everything (sell to all buy orders until position <= 0)
-                for buy_order in list(order_depth.buy_orders.items()):
-                    bid, bid_amount = buy_order
-                    if position <= 0:
-                        break
+            #     # Sell everything (sell to all buy orders until position <= 0)
+            #     for buy_order in list(order_depth.buy_orders.items()):
+            #         bid, bid_amount = buy_order
+            #         if position <= 0:
+            #             break
                     
-                    # In case I guess (ideally I would think that we sell everything until our position is back to 0)
-                    if position - bid_amount <= 0:
-                        orders.append(Order(product, bid, -1 * position))
+            #         # In case I guess (ideally I would think that we sell everything until our position is back to 0)
+            #         if position - bid_amount <= 0:
+            #             orders.append(Order(product, bid, -1 * position))
 
-                    else:
-                        orders.append(Order(product, bid, -1 * bid_amount))
+            #         else:
+            #             orders.append(Order(product, bid, -1 * bid_amount))
                     
-                    position -= bid_amount
+            #         position -= bid_amount
                 
-                # We're done for this product; move onto the next product
-                continue
+            #     # We're done for this product; move onto the next product
+            #     continue
             
             # Otherwise, if there is no reason to sell everything, resume!
 
@@ -637,14 +609,14 @@ class Trader:
 
                 # If there are more than 75 sell orders in the sell order history (max is 150)
                 # TODO: Discuss about this
-                if len(sell_order_history[product]) > 7500:
-                    # If the current sell order price is 0.5% above the 10th most recent sell order price
-                    if best_ask > (sell_order_history[product][-10] * 1.05):
-                        print("BIG JUMP!!!")
+                # if len(sell_order_history[product]) > 7500:
+                #     # If the current sell order price is 0.5% above the 10th most recent sell order price
+                #     if best_ask > (sell_order_history[product][-10] * 1.05):
+                #         print("BIG JUMP!!!")
 
-                        # Reduce the sell order history by 70 (remove the 70 oldest)
-                        for i in range(70, len(sell_order_history[product])):
-                            sell_order_history[product].pop(0)
+                #         # Reduce the sell order history by 70 (remove the 70 oldest)
+                #         for i in range(70, len(sell_order_history[product])):
+                #             sell_order_history[product].pop(0)
 
                 sell_order_history[product].append(best_ask)
                 
