@@ -1,6 +1,7 @@
 from datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List
 from numpy import mean, std
+from math import floor, ceil
 import string
 
 class Product:
@@ -27,13 +28,17 @@ class Emerald(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
 
-        self.acceptable_buy_price = 9995
-        self.acceptable_sell_price = 10005
+        # Assuming that the bids are less than the asks most of the time, based on the Tutorial Round's Data in a Bottle
+        self.average_mid_price = (self.buy_order_average + self.sell_order_average) / 2
+        
+        # This is less "hardcoded", we hope?
+        self.acceptable_buy_price = ceil(self.buy_order_average) + 1
+        self.acceptable_sell_price = floor(self.sell_order_average) - 1
 
 class Tomatoes(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
-
+        
         self.acceptable_buy_price = 9995
         self.acceptable_sell_price = 10005
 
@@ -280,30 +285,30 @@ class Trader:
                         "sunlightIndex",
                         "transportFees"]
         
-        # Print state properties
-        #print("traderData: " + state.traderData)
+        """ Print state properties """
+        print("traderData: " + state.traderData)
         print("Observations: " + str(state.observations))
         print(f"Own trades: {state.own_trades}")
 
-        # Make relavant dictionaries (by default)
+        """ Make relavant dictionaries (by default) """
         sell_order_history = make_empty_container(products=PRODUCT_NAMES, make_position_dictionary=False)
         buy_order_history = make_empty_container(products=PRODUCT_NAMES, make_position_dictionary=False)
         current_positions = make_empty_container(products=PRODUCT_NAMES, make_position_dictionary=True)
         previous_macaron_information = make_empty_container(products=MACARON_INFO, make_position_dictionary=False)
 
-        # Update the dictionaries with previous trading data if it exists
+        """ Update the dictionaries with previous trading data if it exists """
         if state.traderData != "":
             sell_order_history, buy_order_history, current_positions, previous_macaron_information = convert_trading_data(state.traderData)
 
         strategy = Strategy(sell_order_history, buy_order_history, current_positions, POSITION_LIMITS)
 
-        # Orders to be placed on exchange matching engine
+        """ Orders to be placed on exchange matching engine """
         result = {}
 
-        # state.order_depths:
+        """ state.order_depths: """
         # keys = products, values = OrderDepth instances
 
-        # Go through each product, for each product
+        """ Go through each product, for each product """
         for product in state.order_depths:
             print(f"Current product: {product}")
 
@@ -317,6 +322,7 @@ class Trader:
             """
             order_depth: OrderDepth = state.order_depths[product]
 
+            """ Update order histories """
             if len(order_depth.sell_orders) != 0:
                 best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
                 update_order_history(sell_order_history, product, best_ask)
@@ -325,20 +331,23 @@ class Trader:
                 best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
                 update_order_history(buy_order_history, product, best_bid)
 
-            # Skip the first iteration of trading, also tariffs are scary (boo) (oh no) (spooky)
+            """ Skip the first iteration of trading, also tariffs are scary (boo) (oh no) (spooky) """
             if state.traderData == "" or product != "EMERALDS":
                 #print("First iteration, will not do any trading")
                 continue
             
-            # Get the current position of the product
+            """ Get the current position of the product """
             position = strategy.product_info[product].current_position
             print(f"Current position: {position}")
             
-            # This is still in the "for product in state.order_depths" for loop
-            # After we make our orders, put those orders in result for that respective product
-            result[product] = strategy.trade_emeralds(order_depth)
+            """ This is still in the for product in state.order_depths for loop """
+            # Make our orders, and put those orders in result for that respective product
+            if product == "EMERALDS":
+                result[product] = strategy.trade_emeralds(order_depth)
+            
             current_positions[product] = position
 
+        """ Make the new data to append for the next iteration """
         newData = []
         newData.append(sell_order_history)
         newData.append(buy_order_history)
