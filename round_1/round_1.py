@@ -2,6 +2,7 @@ from datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List
 from numpy import mean, std
 from math import floor, ceil
+from statistics import fmean
 import string
 
 class Product:
@@ -20,6 +21,8 @@ class Product:
         if len(buy_order_history) > 0:
             self.buy_order_average = mean(buy_order_history)
 
+        self.historical_average_mid_price = (self.buy_order_average + self.sell_order_average) / 2
+
         # This will be implemented in children classes
         self.acceptable_buy_price = None
         self.acceptable_sell_price = None
@@ -27,8 +30,6 @@ class Product:
 class Emerald(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
-
-        self.average_mid_price = (self.buy_order_average + self.sell_order_average) / 2
         
         # Assuming that the bids are less than the asks most of the time, based on the Tutorial Round's Data in a Bottle
         # This is less "hardcoded", we hope?
@@ -38,35 +39,13 @@ class Emerald(Product):
 class Tomatoes(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit, previous_EMA):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
-        
-        self.average_mid_price = (self.buy_order_average + self.sell_order_average) / 2
 
         # TODO: These are VERY experimental
-        # TODO: Maybe look into average of the last like 30 prices?
+        # TODO: This is hardcoded, maybe look into calculating this in some way?
         self.alpha = 0.3
-        
-        biggest_order_history_size = max(len(sell_order_history), len(buy_order_history))
-        if biggest_order_history_size > 0 and False:
-            recency_dividor = 30
-            recent_past = biggest_order_history_size / recency_dividor
 
-            self.alpha = 2 / (recent_past + 1)
-        
         self.previous_EMA = previous_EMA
-        if self.previous_EMA == 0 or self.previous_EMA == 0.0:
-            self.previous_EMA = self.average_mid_price
-        
-        check = self.previous_EMA
-        if len(sell_order_history) > 30 and len(buy_order_history) > 30:
-            # TODO: Fix this and resubmit
-            check = mean(mean(sell_order_history[0:25]), mean(buy_order_history[0:25]))
-
-        # self.EMA = (self.alpha * self.average_mid_price) + ((1 - self.alpha) * self.previous_EMA)
-        self.EMA = (self.alpha * self.average_mid_price) + ((1 - self.alpha) * check)
-
-        # The idea is that I think there is also a spread between the bid and ask prices in the Tutorial Round Data in a Bottle?
-        self.acceptable_buy_price = floor(self.EMA)
-        self.acceptable_sell_price = ceil(self.EMA)
+        self.EMA = self.previous_EMA
 
 class Strategy:
     def __init__(self, sell_order_history, buy_order_history, current_positions, position_limits, previous_EMAs):
@@ -95,47 +74,61 @@ class Strategy:
         # Orders to return back
         orders: List[Order] = []
 
-        for i in range(0, len(order_depth.sell_orders)):
-            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[i]
-
+        for best_ask, best_ask_amount in list(order_depth.sell_orders.items()):
             print(f"BUY EMERALDS: {str(-best_ask_amount)} x {acceptable_buy_price}")
             orders.append(Order(product_name, acceptable_buy_price, -best_ask_amount))
 
-        for i in range(0, len(order_depth.buy_orders)):
-            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[i]
-
+        for best_bid, best_bid_amount in list(order_depth.buy_orders.items()):
             print(f"SELL EMERALDS: {str(best_bid_amount)} x {acceptable_sell_price}")
             orders.append(Order(product_name, acceptable_sell_price, -best_bid_amount))
         
         return orders
     
-    def trade_tomatoes(self, order_depth, best_bid, best_ask):
+    def trade_tomatoes(self, order_depth):
+        def calculate_EMA(tomatoes, best_bid, best_ask):
+            current_mid_price = (best_bid + best_ask) / 2
+
+            if tomatoes.previous_EMA == 0 or tomatoes.previous_EMA == 0.0:
+                tomatoes.previous_EMA = current_mid_price
+
+            tomatoes.EMA = (tomatoes.alpha * current_mid_price) + ((1 - tomatoes.alpha) * tomatoes.previous_EMA)
+
+            # Currently not really used, but it's good in case maybe
+            tomatoes.acceptable_buy_price = ceil(tomatoes.EMA)
+            tomatoes.acceptable_sell_price = floor(tomatoes.EMA)
+
+            return tomatoes.EMA
+        
+        # Start of the tomatoes trading strategy
         tomatoes = self.product_info["TOMATOES"]
         product_name = tomatoes.product_name
         
-        # Handling the spread does help
+        # Handling the spread did help before with a different strategy to make the algorithm more stable
+        # In this current strategy, it is used to offset the EMA to get our favorable buy and sell prices
+        best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
+        best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
         spread = best_ask - best_bid
+        
+        # Calculate the EMA
+        calculate_EMA(tomatoes, best_bid, best_ask)
 
-        # TODO: I tried duplicating a code line to sell, and that changed nothing.
-        # TODO: Maybe that either means we're selling at a loss or our prices are not favorable instead of a holding issue?
-        acceptable_buy_price = floor(tomatoes.acceptable_buy_price - spread)
-        acceptable_sell_price = ceil(tomatoes.acceptable_sell_price + spread)
+        """ The idea is that I think there is also a spread between the bid and ask prices in the Tutorial Round Data in a Bottle?
+            So we can do a similar strategy to emeralds where we sell 1 below the ask and sell 1 above the bid
+            Refer to Tomatoes Current Strategy in the IMC 4 Product Info & Strategy Notes """
+        acceptable_buy_price = ceil(tomatoes.EMA - (spread / 2) + 1)
+        acceptable_sell_price = floor(tomatoes.EMA + (spread / 2) - 1)
 
         # Orders to return back
         orders: List[Order] = []
 
         # TODO: Maybe check if we're in a rising trend and if so buy and sell??? Or going down trend too maybe :0
-        for i in range(0, len(order_depth.sell_orders)):
-            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[i]
+        for ask, ask_amount in list(order_depth.sell_orders.items()):
+            print(f"BUY TOMATOES: {str(-ask_amount)} x {acceptable_buy_price}")
+            orders.append(Order(product_name, acceptable_buy_price, -ask_amount))
 
-            print(f"BUY TOMATOES: {str(-best_ask_amount)} x {acceptable_buy_price}")
-            orders.append(Order(product_name, acceptable_buy_price, -best_ask_amount))
-
-        for i in range(0, len(order_depth.buy_orders)):
-            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[i]
-
-            print(f"SELL TOMATOES: {str(best_bid_amount)} x {acceptable_sell_price}")
-            orders.append(Order(product_name, acceptable_sell_price, -best_bid_amount))
+        for bid, bid_amount in list(order_depth.buy_orders.items()):
+            print(f"SELL TOMATOES: {str(bid_amount)} x {acceptable_sell_price}")
+            orders.append(Order(product_name, acceptable_sell_price, -bid_amount))
         
         return orders
 
@@ -442,8 +435,8 @@ class Trader:
 
             """ Skip the first iteration of trading or any products we don't want to trade for now,
                 also tariffs are scary (boo) (oh no) (spooky) """
-            # products_we_want_to_trade: list[str] = ["EMERALDS"]
-            products_we_want_to_trade: list[str] = ["TOMATOES"]
+            # products_we_want_to_trade: list[str] = ["EMERALDS", "TOMATOES"]
+            products_we_want_to_trade: list[str] = ["EMERALDS", "TOMATOES"]
 
             if state.traderData == "" or (product not in products_we_want_to_trade):
                 #print("First iteration, will not do any trading")
@@ -463,9 +456,7 @@ class Trader:
                 result[product] = strategy.trade_emeralds(order_depth)
             
             elif product == "TOMATOES":
-                best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
-                best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
-                result[product] = strategy.trade_tomatoes(order_depth, best_bid, best_ask)
+                result[product] = strategy.trade_tomatoes(order_depth)
             
             current_positions[product] = position
 
