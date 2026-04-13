@@ -124,6 +124,7 @@ class Strategy:
         # Orders to return back
         orders: List[Order] = []
 
+        # TODO: Maybe check if we're in a rising trend and if so buy and sell??? Or going down trend too maybe :0
         for i in range(0, len(order_depth.sell_orders)):
             best_ask, best_ask_amount = list(order_depth.sell_orders.items())[i]
 
