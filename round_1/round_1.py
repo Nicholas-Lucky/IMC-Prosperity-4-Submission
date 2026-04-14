@@ -3,7 +3,64 @@ from typing import List
 from numpy import mean, std
 from math import floor, ceil
 from statistics import fmean
+from jsonpickle import encode, decode
 import string
+
+# This is a class to house currently-unused functions that we might consider looking into in the future
+class Functions_Storage:
+    def voucher_makes_sense(voucher_amount, most_recent_volcanic_rock_sell_order):
+        upper_bound = most_recent_volcanic_rock_sell_order * 1.02
+        lower_bound = most_recent_volcanic_rock_sell_order * 0.98
+
+        if voucher_amount < upper_bound and voucher_amount > lower_bound:
+            print(f"Voucher amount {voucher_amount} DOES (YES) makes sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+            return True
+        
+        print(f"Voucher amount {voucher_amount} DOES NOT (NO) make sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+        return False
+    
+    def buy_to_bot(orders, current_position, position_limit, product, best_ask, best_ask_amount):
+        if current_position - best_ask_amount <= position_limit:
+            orders.append(Order(product, best_ask, -1 * best_ask_amount))
+
+    def sell_to_bot(orders, current_position, position_limit, product, best_bid, best_bid_amount):
+        if current_position - best_bid_amount >= (-1 * position_limit):
+            orders.append(Order(product, best_bid, -1 * best_bid_amount))
+    
+    def big_dip_checker(sell_order_history, buy_order_history, current_mid_price, multiplier):
+        sell_average = mean(sell_order_history)
+        buy_average = mean(buy_order_history)
+        mid_average_value = (sell_average + buy_average) / 2
+
+        return current_mid_price > (mid_average_value * multiplier)
+
+    def small_dip_checker(sell_order_history, buy_order_history, recents_length, current_mid_price, multiplier):
+        sell_recents = sell_order_history
+        if len(sell_recents) > recents_length:
+            sell_recents = sell_recents[0:recents_length]
+        
+        sell_recents_average = mean(sell_recents)
+        
+        buy_recents = buy_order_history
+        if len(buy_recents) > recents_length:
+            buy_recents = buy_recents[0:recents_length]
+        
+        buy_recents_average = mean(buy_recents)
+
+        mid_recents_average = (sell_recents_average + buy_recents_average) / 2
+
+        #print(f"recents_average: {recents_average}")
+
+        return current_mid_price > (mid_recents_average * multiplier)
+    
+    def get_maximum_purchased_order_price(own_trades):
+        purchased_prices: list = []
+
+        for product in own_trades:
+            for trade_instance in own_trades[product]:
+                purchased_prices.append(trade_instance.price)
+        
+        return max(purchased_prices)
 
 class Product:
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
@@ -32,6 +89,7 @@ class Emerald(Product):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
         
         # Assuming that the bids are less than the asks most of the time, based on the Tutorial Round's Data in a Bottle
+        # Also assuming that the prices will remain stable the whole way through
         # This is less "hardcoded", we hope?
         self.acceptable_buy_price = ceil(self.buy_order_average) + 1
         self.acceptable_sell_price = floor(self.sell_order_average) - 1
@@ -132,134 +190,34 @@ class Strategy:
         
         return orders
 
-def make_empty_container(products, make_position_dictionary: bool=False):
-    container = {}
-    for product in products:
-        if make_position_dictionary:
-            container[product] = 0
+class New_Data:
+    def __init__(self, product_names, macaron_info):
+        self.MAX_HISTORY_LENGTH = 150
 
-        else:
-            container[product] = []
-    
-    return container
+        self.sell_order_history = self.make_empty_container(products=product_names)
+        self.buy_order_history = self.make_empty_container(products=product_names)
+        self.current_positions = self.make_empty_container(products=product_names, make_position_dictionary=True)
+        self.previous_macaron_information = self.make_empty_container(products=macaron_info)
+        self.previous_EMAs = self.make_empty_container(products=product_names, make_position_dictionary=True)
 
-def initialize_product_information(products, sell_order_history, buy_order_history, current_positions, observation_info_history, current_observation_info=None):
-    product_info = {}
-    for product in products:
-        if product == "MAGNIFICENT_MACARONS":
-            product_info["MAGNIFICENT_MACARONS"] = Macaron(product, sell_order_history[product], buy_order_history[product], current_positions[product], observation_info_history, current_observation_info)
-            continue
-        product_info[product] = Product(product, sell_order_history[product], buy_order_history[product], current_positions[product])
+    def make_empty_container(self, products, make_position_dictionary: bool=False):
+        container = {}
+        for product in products:
+            if make_position_dictionary:
+                container[product] = 0
 
-    # Manual offset adjustments
-    product_info["EMERALDS"].set_buy_price_offset(0)
-    product_info["EMERALDS"].set_sell_price_offset(0)
-    # product_info["TOMATOES"].set_buy_price_offset(1)
-    # product_info["TOMATOES"].set_sell_price_offset(1)
-
-    # Return the products' information
-    return product_info
-
-def convert_trading_data(s):
-    def get_orders(s):
-        s = s.strip("{}")
-        s = s.split("]")
-
-        newList = []
-        for entry in s:
-            if entry != "":
-                newList.append((entry + "]").strip(", "))
-
-        d = {}
-        for item in newList:
-            key_value_pair = item.split(":")
-            key = key_value_pair[0].strip(" '")
-            
-            values = key_value_pair[1].strip(" []").split(",")
-            
-            if values == ['']:
-                d[key] = []
-                
             else:
-                for index, value in enumerate(values):
-                    values[index] = float(value.strip())
-                
-                d[key] = values
+                container[product] = []
         
-        return d
-
-    def get_positions(s):
-        s = s.strip("{}")
-        s = s.split(",")
-        
-        newList = []
-        for entry in s:
-            if entry != "":
-                newList.append((entry).strip())
-
-        d = {}
-        for item in newList:
-            key_value_pair = item.split(":")
-            key = key_value_pair[0].strip("'")
-            
-            value = int(key_value_pair[1].strip())
-            d[key] = value
-        
-        return d
+        return container
     
-    def get_EMAs(s):
-        print(f"hello it is i {s}")
-        s = s.strip("{}")
-        s = s.split(",")
-        
-        newList = []
-        for entry in s:
-            if entry != "":
-                newList.append((entry).strip())
-
-        d = {}
-        for item in newList:
-            key_value_pair = item.split(":")
-            key = key_value_pair[0].strip("'")
-            
-            value = float(key_value_pair[1].strip())
-            d[key] = value
-        
-        return d
-
-    # convert_trading_data function code
-    s = s.strip("[]")
-    s = s.split("}")
-
-    d_list = []
-    for entry in s:
-        if entry != "":
-            d_list.append((entry + "}").strip(", "))
+    def update_order_history(self, history, product, new_addition):
+        if len(history[product]) > self.MAX_HISTORY_LENGTH:
+            history[product].pop(0)
+        history[product].append(new_addition)
     
-    sell_orders = get_orders(d_list[0])
-    buy_orders = get_orders(d_list[1])
-    positions = get_positions(d_list[2])
-    macaron_info = get_orders(d_list[3])
-    previous_EMAs = get_EMAs(d_list[4])
-
-    d_list[0] = sell_orders
-    d_list[1] = buy_orders
-    d_list[2] = positions
-    d_list[3] = macaron_info
-    d_list[4] = previous_EMAs
-    
-    return d_list
-
-def voucher_makes_sense(voucher_amount, most_recent_volcanic_rock_sell_order):
-    upper_bound = most_recent_volcanic_rock_sell_order * 1.02
-    lower_bound = most_recent_volcanic_rock_sell_order * 0.98
-
-    if voucher_amount < upper_bound and voucher_amount > lower_bound:
-        print(f"Voucher amount {voucher_amount} DOES (YES) makes sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
-        return True
-    
-    print(f"Voucher amount {voucher_amount} DOES NOT (NO) make sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
-    return False
+    def update_previous_EMA(self, product, new_EMA):
+        self.previous_EMAs[product] = new_EMA
 
 def get_lowest_sell_order(sell_orders):
     lowest_price = 0
@@ -293,56 +251,6 @@ def get_highest_buy_order(buy_orders):
     
     return (highest_price, associated_amount)
 
-def buy_to_bot(orders, current_position, position_limit, product, best_ask, best_ask_amount):
-    if current_position - best_ask_amount <= position_limit:
-        orders.append(Order(product, best_ask, -1 * best_ask_amount))
-
-def sell_to_bot(orders, current_position, position_limit, product, best_bid, best_bid_amount):
-    if current_position - best_bid_amount >= (-1 * position_limit):
-        orders.append(Order(product, best_bid, -1 * best_bid_amount))
-
-def big_dip_checker(sell_order_history, buy_order_history, current_mid_price, multiplier):
-    sell_average = mean(sell_order_history)
-    buy_average = mean(buy_order_history)
-    mid_average_value = (sell_average + buy_average) / 2
-
-    return current_mid_price > (mid_average_value * multiplier)
-
-def small_dip_checker(sell_order_history, buy_order_history, recents_length, current_mid_price, multiplier):
-    sell_recents = sell_order_history
-    if len(sell_recents) > recents_length:
-        sell_recents = sell_recents[0:recents_length]
-    
-    sell_recents_average = mean(sell_recents)
-    
-    buy_recents = buy_order_history
-    if len(buy_recents) > recents_length:
-        buy_recents = buy_recents[0:recents_length]
-    
-    buy_recents_average = mean(buy_recents)
-
-    mid_recents_average = (sell_recents_average + buy_recents_average) / 2
-
-    #print(f"recents_average: {recents_average}")
-
-    return current_mid_price > (mid_recents_average * multiplier)
-
-def update_order_history(history, product, new_addition):
-    max_history_length = 150
-
-    if len(history[product]) > max_history_length:
-        history[product].pop(0)
-    history[product].append(new_addition)
-
-def get_maximum_purchased_order_price(own_trades):
-    purchased_prices: list = []
-
-    for product in own_trades:
-        for trade_instance in own_trades[product]:
-            purchased_prices.append(trade_instance.price)
-    
-    return max(purchased_prices)
-
 class Trader:
     def bid(self):
         return 15
@@ -363,7 +271,7 @@ class Trader:
                         "sugarPrice",
                         "sunlightIndex",
                         "transportFees"]
-        
+
 
 
         """ Print state properties """
@@ -373,20 +281,16 @@ class Trader:
 
 
 
-        """ Make relavant dictionaries (by default) """
-        sell_order_history = make_empty_container(products=PRODUCT_NAMES)
-        buy_order_history = make_empty_container(products=PRODUCT_NAMES)
-        current_positions = make_empty_container(products=PRODUCT_NAMES, make_position_dictionary=True)
-        previous_macaron_information = make_empty_container(products=MACARON_INFO)
-        previous_EMAs = make_empty_container(products=PRODUCT_NAMES, make_position_dictionary=True)
+        """ Make a New_Data object to update (by default) """
+        new_data = New_Data(PRODUCT_NAMES, MACARON_INFO)
 
 
 
-        """ Update the dictionaries with previous trading data if it exists """
+        """ Update new_data with previous trading data if it exists """
         if state.traderData != "":
-            sell_order_history, buy_order_history, current_positions, previous_macaron_information, previous_EMAs = convert_trading_data(state.traderData)
+            new_data = decode(state.traderData)
 
-        strategy = Strategy(sell_order_history, buy_order_history, current_positions, POSITION_LIMITS, previous_EMAs)
+        strategy = Strategy(new_data.sell_order_history, new_data.buy_order_history, new_data.current_positions, POSITION_LIMITS, new_data.previous_EMAs)
 
 
 
@@ -419,17 +323,17 @@ class Trader:
             """ Update order histories """
             if len(order_depth.sell_orders) != 0:
                 best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
-                update_order_history(sell_order_history, product, best_ask)
+                new_data.update_order_history(new_data.sell_order_history, product, best_ask)
             
             if len(order_depth.buy_orders) != 0:
                 best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
-                update_order_history(buy_order_history, product, best_bid)
+                new_data.update_order_history(new_data.buy_order_history, product, best_bid)
             
 
 
             """ Update Product EMAs """
             if product == "TOMATOES":
-                previous_EMAs[product] = strategy.product_info[product].EMA
+                new_data.update_previous_EMA(product, strategy.product_info[product].EMA)
             
 
 
@@ -450,30 +354,22 @@ class Trader:
             
 
 
-            """ This is still in the for product in state.order_depths for loop """
-            # Make our orders, and put those orders in result for that respective product
+            """ This is still in the for product in state.order_depths for loop
+                Make our orders, and put those orders in result for that respective product """
             if product == "EMERALDS":
                 result[product] = strategy.trade_emeralds(order_depth)
             
             elif product == "TOMATOES":
                 result[product] = strategy.trade_tomatoes(order_depth)
             
-            current_positions[product] = position
+            new_data.current_positions[product] = position
 
 
 
         """ Make the new data to append for the next iteration """
-        newData = []
-        newData.append(sell_order_history)
-        newData.append(buy_order_history)
-        newData.append(current_positions)
-        newData.append(previous_macaron_information)
-        newData.append(previous_EMAs)
-
-        # String value holding Trader state data required. 
-        # It will be delivered as TradingState.traderData on next execution.
-        traderData = str(newData)
+        traderData = encode(new_data)
 
         # Sample conversion request. Check more details below. 
         conversions = 0
         return result, conversions, traderData
+
