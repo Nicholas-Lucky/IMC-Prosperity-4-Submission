@@ -114,7 +114,7 @@ class Product:
         self.acceptable_sell_price = None
 
 class Intarian_Pepper_Root(Product):
-    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit, previous_EMA):
         super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
         
         # Assuming that the bids are less than the asks most of the time, based on the Tutorial Round's Data in a Bottle
@@ -122,6 +122,13 @@ class Intarian_Pepper_Root(Product):
         # This is less "hardcoded", we hope?
         self.acceptable_buy_price = ceil(self.buy_order_average) + 1
         self.acceptable_sell_price = floor(self.sell_order_average) - 1
+
+        # TODO: These are VERY experimental
+        # TODO: This is hardcoded, maybe look into calculating this in some way?
+        self.alpha = 0.3
+
+        self.previous_EMA = previous_EMA
+        self.EMA = self.previous_EMA
 
 class Ash_Coated_Osmium(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit, previous_EMA):
@@ -142,7 +149,8 @@ class Strategy:
                                                                          sell_order_history["INTARIAN_PEPPER_ROOT"],
                                                                          buy_order_history["INTARIAN_PEPPER_ROOT"],
                                                                          current_positions["INTARIAN_PEPPER_ROOT"],
-                                                                         position_limits["INTARIAN_PEPPER_ROOT"])
+                                                                         position_limits["INTARIAN_PEPPER_ROOT"],
+                                                                         previous_EMAs["INTARIAN_PEPPER_ROOT"])
 
         self.product_info["ASH_COATED_OSMIUM"] = Ash_Coated_Osmium("ASH_COATED_OSMIUM",
                                                                    sell_order_history["ASH_COATED_OSMIUM"],
@@ -152,43 +160,23 @@ class Strategy:
                                                                    previous_EMAs["ASH_COATED_OSMIUM"])
     
     def trade_intarian_pepper_root(self, order_depth):
-        intarian_pepper_root = self.product_info["INTARIAN_PEPPER_ROOT"]
-        product_name = intarian_pepper_root.product_name
-        
-        acceptable_buy_price = intarian_pepper_root.acceptable_buy_price
-        acceptable_sell_price = intarian_pepper_root.acceptable_sell_price
-
-        # Orders to return back
-        orders: List[Order] = []
-
-        for best_ask, best_ask_amount in list(order_depth.sell_orders.items()):
-            print(f"BUY INTARIAN_PEPPER_ROOT: {str(-best_ask_amount)} x {acceptable_buy_price}")
-            orders.append(Order(product_name, acceptable_buy_price, -best_ask_amount))
-
-        for best_bid, best_bid_amount in list(order_depth.buy_orders.items()):
-            print(f"SELL INTARIAN_PEPPER_ROOT: {str(best_bid_amount)} x {acceptable_sell_price}")
-            orders.append(Order(product_name, acceptable_sell_price, -best_bid_amount))
-        
-        return orders
-    
-    def trade_ash_coated_osmium(self, order_depth):
-        def calculate_EMA(ash_coated_osmium, best_bid, best_ask):
+        def calculate_EMA(intarian_pepper_root, best_bid, best_ask):
             current_mid_price = (best_bid + best_ask) / 2
 
-            if ash_coated_osmium.previous_EMA == 0 or ash_coated_osmium.previous_EMA == 0.0:
-                ash_coated_osmium.previous_EMA = current_mid_price
+            if intarian_pepper_root.previous_EMA == 0 or intarian_pepper_root.previous_EMA == 0.0:
+                intarian_pepper_root.previous_EMA = current_mid_price
 
-            ash_coated_osmium.EMA = (ash_coated_osmium.alpha * current_mid_price) + ((1 - ash_coated_osmium.alpha) * ash_coated_osmium.previous_EMA)
+            intarian_pepper_root.EMA = (intarian_pepper_root.alpha * current_mid_price) + ((1 - intarian_pepper_root.alpha) * intarian_pepper_root.previous_EMA)
 
             # Currently not really used, but it's good in case maybe
-            ash_coated_osmium.acceptable_buy_price = ceil(ash_coated_osmium.EMA)
-            ash_coated_osmium.acceptable_sell_price = floor(ash_coated_osmium.EMA)
+            intarian_pepper_root.acceptable_buy_price = ceil(intarian_pepper_root.EMA)
+            intarian_pepper_root.acceptable_sell_price = floor(intarian_pepper_root.EMA)
 
-            return ash_coated_osmium.EMA
+            return intarian_pepper_root.EMA
         
         # Start of the Ash Coated Osmium trading strategy
-        ash_coated_osmium = self.product_info["ASH_COATED_OSMIUM"]
-        product_name = ash_coated_osmium.product_name
+        intarian_pepper_root = self.product_info["INTARIAN_PEPPER_ROOT"]
+        product_name = intarian_pepper_root.product_name
         
         # Handling the spread did help before with a different strategy to make the algorithm more stable
         # In this current strategy, it is used to offset the EMA to get our favorable buy and sell prices
@@ -197,27 +185,29 @@ class Strategy:
         spread = best_ask - best_bid
         
         # Calculate the EMA
-        calculate_EMA(ash_coated_osmium, best_bid, best_ask)
+        calculate_EMA(intarian_pepper_root, best_bid, best_ask)
 
-        """ The idea is that I think there is also a spread between the bid and ask prices in the Tutorial Round Data in a Bottle?
-            So we can do a similar strategy to emeralds where we sell 1 below the ask and sell 1 above the bid
-            Refer to Tomatoes Current Strategy in the IMC 4 Product Info & Strategy Notes """
-        acceptable_buy_price = ceil(ash_coated_osmium.EMA - (spread / 2) + 1)
-        acceptable_sell_price = floor(ash_coated_osmium.EMA + (spread / 2) - 1)
+        acceptable_buy_price = ceil(intarian_pepper_root.EMA - (spread / 2) + 1)
+        acceptable_sell_price = floor(intarian_pepper_root.EMA + (spread / 2) - 1)
 
         # Orders to return back
         orders: List[Order] = []
 
         # TODO: Maybe check if we're in a rising trend and if so buy and sell??? Or going down trend too maybe :0
         for ask, ask_amount in list(order_depth.sell_orders.items()):
-            print(f"BUY ASH_COATED_OSMIUM: {str(-ask_amount)} x {acceptable_buy_price}")
-            orders.append(Order(product_name, acceptable_buy_price, -ask_amount))
+            if ask < acceptable_buy_price:
+                print(f"BUY INTARIAN_PEPPER_ROOT: {str(-ask_amount)} x {acceptable_buy_price}")
+                orders.append(Order(product_name, ask, -ask_amount))
 
         for bid, bid_amount in list(order_depth.buy_orders.items()):
-            print(f"SELL ASH_COATED_OSMIUM: {str(bid_amount)} x {acceptable_sell_price}")
-            orders.append(Order(product_name, acceptable_sell_price, -bid_amount))
+            if bid > acceptable_sell_price:
+                print(f"SELL INTARIAN_PEPPER_ROOT: {str(bid_amount)} x {acceptable_sell_price}")
+                orders.append(Order(product_name, bid, -bid_amount))
         
         return orders
+
+    def trade_ash_coated_osmium(self, order_depth):
+        pass
 
 def get_lowest_sell_order(sell_orders):
     lowest_price = 0
@@ -332,8 +322,7 @@ class Trader:
 
 
             """ Update Product EMAs """
-            if product == "ASH_COATED_OSMIUM":
-                new_data.update_previous_EMA(product, strategy.product_info[product].EMA)
+            new_data.update_previous_EMA(product, strategy.product_info[product].EMA)
             
 
 
