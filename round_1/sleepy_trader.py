@@ -320,6 +320,9 @@ class Trader:
 
         """ Go through each product, for each product """
         for product in state.order_depths:
+            """ The trader fell asleep -.- zzzzz """
+            break
+
             print(f"Current product: {product}")
 
             """
