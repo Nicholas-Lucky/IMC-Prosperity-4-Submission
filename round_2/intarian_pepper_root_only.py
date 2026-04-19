@@ -195,8 +195,8 @@ class Strategy:
         slope = (y_2 - y_1) / len(intarian_pepper_root.sell_order_history)
         # slope = (y_2 - y_1) / 50
 
-        # predicted_price = intarian_pepper_root.EMA + slope
-        predicted_price = mean([intarian_pepper_root.sell_order_history[-1], intarian_pepper_root.buy_order_history[-1]]) + slope
+        predicted_price = intarian_pepper_root.EMA + slope
+        # predicted_price = mean([intarian_pepper_root.sell_order_history[-1], intarian_pepper_root.buy_order_history[-1]]) + slope
         # predicted_price = (best_bid + best_ask) / 2
         print(f"predicted price: {predicted_price}")
 
@@ -211,7 +211,7 @@ class Strategy:
         
         if state.own_trades != {}:
             for trade in state.own_trades["INTARIAN_PEPPER_ROOT"]:
-                if trade.price > max_own_trade_test:
+                if trade.price > max_own_trade_test and trade.buyer == "SUBMISSION":
                     max_own_trade_test = trade.price
 
         # Orders to return back
@@ -219,14 +219,17 @@ class Strategy:
 
         # TODO: Maybe check if we're in a rising trend and if so buy and sell??? Or going down trend too maybe :0
         for ask, ask_amount in list(order_depth.sell_orders.items()):
-            if ask < acceptable_buy_price:
-                print(f"BUY INTARIAN_PEPPER_ROOT: {str(-ask_amount)} x {acceptable_buy_price}")
-                orders.append(Order(product_name, ask, -ask_amount))
+            # if ask < acceptable_buy_price:
+            print(f"BUY INTARIAN_PEPPER_ROOT: {str(-ask_amount)} x {acceptable_buy_price}")
+            orders.append(Order(product_name, ask, -ask_amount))
 
         for bid, bid_amount in list(order_depth.buy_orders.items()):
-            if bid > acceptable_sell_price:
+            # if bid > acceptable_sell_price:
+            if bid > max_own_trade_test:
                 print(f"SELL INTARIAN_PEPPER_ROOT: {str(bid_amount)} x {acceptable_sell_price}")
-                orders.append(Order(product_name, bid, -bid_amount))
+                # orders.append(Order(product_name, bid, -bid_amount))
+                orders.append(Order(product_name, int(acceptable_sell_price), -bid_amount))
+
         
         return orders
 
@@ -292,6 +295,7 @@ class Trader:
         print("traderData: " + state.traderData)
         print("Observations: " + str(state.observations))
         print(f"Own trades: {state.own_trades}")
+        print(f"Position: {state.position}")
 
 
 
