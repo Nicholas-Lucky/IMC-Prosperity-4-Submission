@@ -193,18 +193,18 @@ class Strategy:
         y_1 = mean([intarian_pepper_root.sell_order_history[0], intarian_pepper_root.buy_order_history[0]])
         y_2 = mean([intarian_pepper_root.sell_order_history[-1], intarian_pepper_root.buy_order_history[-1]])
         slope = (y_2 - y_1) / len(intarian_pepper_root.sell_order_history)
-        # slope = (y_2 - y_1) / 50
+        
+        print(f"slope: {slope}")
+        print(f"slope if it was y2 - y1: {y_2 - y_1}")
 
         predicted_price = intarian_pepper_root.EMA + slope
         # predicted_price = mean([intarian_pepper_root.sell_order_history[-1], intarian_pepper_root.buy_order_history[-1]]) + slope
         # predicted_price = (best_bid + best_ask) / 2
         print(f"predicted price: {predicted_price}")
 
-        # acceptable_buy_price = intarian_pepper_root.historical_average_mid_price - 1
-        # acceptable_sell_price = intarian_pepper_root.historical_average_mid_price + 1
-
         acceptable_buy_price = predicted_price
-        acceptable_sell_price = predicted_price + spread
+        # acceptable_sell_price = predicted_price + (spread / 2)
+        acceptable_sell_price = predicted_price + (spread / 4)
         
         # Assuming that the prices will always be greater than 0
         max_own_trade_test = -1
@@ -221,14 +221,18 @@ class Strategy:
         for ask, ask_amount in list(order_depth.sell_orders.items()):
             # if ask < acceptable_buy_price:
             print(f"BUY INTARIAN_PEPPER_ROOT: {str(-ask_amount)} x {acceptable_buy_price}")
-            orders.append(Order(product_name, ask, -ask_amount))
+            test_amount_limit = min(ask_amount, 5)
+            # orders.append(Order(product_name, ask, -ask_amount))
+            orders.append(Order(product_name, ask, -test_amount_limit))
 
         for bid, bid_amount in list(order_depth.buy_orders.items()):
             # if bid > acceptable_sell_price:
-            if bid > max_own_trade_test:
+            if bid > max_own_trade_test and max_own_trade_test > -1:
                 print(f"SELL INTARIAN_PEPPER_ROOT: {str(bid_amount)} x {acceptable_sell_price}")
                 # orders.append(Order(product_name, bid, -bid_amount))
-                orders.append(Order(product_name, int(acceptable_sell_price), -bid_amount))
+                test_amount_limit = min(bid_amount, 5)
+                # orders.append(Order(product_name, int(acceptable_sell_price), -bid_amount))
+                orders.append(Order(product_name, int(acceptable_sell_price), -test_amount_limit))
 
         
         return orders

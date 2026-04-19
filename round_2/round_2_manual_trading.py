@@ -24,6 +24,9 @@ def calculate_speed_linear(x):
 
     return MINIMUM_MULTIPLIER + (x * per_percentage)
 
+def calculate_speed_quadratic(x):
+    return (-1 / 12500) * ((x - 100)**2) + 0.9
+
 def calculate_speed_exponential_less_steep(x):
     """ Assuming more players pick higher percentages for speed """
     # y = 0.1 + 0.8((e^0.03x - 1) / (e^3 - 1))
@@ -38,6 +41,39 @@ def calculate_speed_exponential_more_steep(x):
     b = 1.02221541328
 
     return a * (b**x)
+
+def calculate_speed_tylers_version(x):
+    speed_distribution = []
+    
+    # What allocations will be picked by at least one team
+    # (because that's all the results will care about I THINK)
+    speed_distribution.extend(list(range(0, 12)))    # 0-11
+    speed_distribution.extend(list(range(19, 22)))   # 19-21
+    speed_distribution.extend(list(range(24, 27)))   # 24-26
+    speed_distribution.extend(list(range(29, 42)))   # 29-41
+    speed_distribution.extend(list(range(49, 53)))   # 49-52
+    speed_distribution.extend(list(range(55, 56)))   # 55
+    speed_distribution.extend(list(range(60, 62)))   # 60-61
+    speed_distribution.extend(list(range(89, 101)))  # 89-100
+
+    # Add our pick to the distribution
+    if x not in speed_distribution:
+        speed_distribution.append(x)
+    speed_distribution.sort()
+
+    # Calculate our multiplier from our pick
+    MINIMUM_MULTIPLIER = 0.1
+    MAXIMUM_MULTIPLIER = 0.8
+    multiplier_range = MAXIMUM_MULTIPLIER - MINIMUM_MULTIPLIER
+    increment_per_allocation = multiplier_range / (len(speed_distribution) - 2)
+
+    for index in range(0, len(speed_distribution)):
+        if speed_distribution[index] == x:
+            print(f"speed multiplier is {MINIMUM_MULTIPLIER + (index * increment_per_allocation)}")
+            return MINIMUM_MULTIPLIER + (index * increment_per_allocation)
+
+    print("Speed multiplier calcualtion failed for some reason")
+    return None
 
 def main():
     BUDGET = 50_000
@@ -63,7 +99,9 @@ def main():
 
                 # speed_value = calculate_speed_linear(speed)
                 # speed_value = calculate_speed_exponential_less_steep(speed)
-                speed_value = calculate_speed_exponential_more_steep(speed)
+                # speed_value = calculate_speed_exponential_more_steep(speed)
+                # speed_value = calculate_speed_quadratic(speed)
+                speed_value = calculate_speed_tylers_version(speed)
 
                 PnL = (research_value * scale_value * speed_value) - (BUDGET * (percentage_used / 100))
                 print(f"research: {research} scale: {scale} speed: {speed} percentage used: {percentage_used} PnL: {PnL}")
