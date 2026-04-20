@@ -75,6 +75,32 @@ def calculate_speed_tylers_version(x):
     print("Speed multiplier calcualtion failed for some reason")
     return None
 
+def calculate_speed_tylers_version_2(x):
+    speed_distribution = []
+    
+    # What allocations will be picked by at least one team
+    # (because that's all the results will care about I THINK)
+    speed_distribution.extend(list(range(0, 101))) # 0-100
+
+    # Add our pick to the distribution
+    if x not in speed_distribution:
+        speed_distribution.append(x)
+    speed_distribution.sort()
+
+    # Calculate our multiplier from our pick
+    MINIMUM_MULTIPLIER = 0.1
+    MAXIMUM_MULTIPLIER = 0.8
+    multiplier_range = MAXIMUM_MULTIPLIER - MINIMUM_MULTIPLIER
+    increment_per_allocation = multiplier_range / (len(speed_distribution) - 2)
+
+    for index in range(0, len(speed_distribution)):
+        if speed_distribution[index] == x:
+            print(f"speed multiplier is {MINIMUM_MULTIPLIER + (index * increment_per_allocation)}")
+            return MINIMUM_MULTIPLIER + (index * increment_per_allocation)
+
+    print("Speed multiplier calcualtion failed for some reason")
+    return None
+
 def main():
     BUDGET = 50_000
 
@@ -101,7 +127,8 @@ def main():
                 # speed_value = calculate_speed_exponential_less_steep(speed)
                 # speed_value = calculate_speed_exponential_more_steep(speed)
                 # speed_value = calculate_speed_quadratic(speed)
-                speed_value = calculate_speed_tylers_version(speed)
+                # speed_value = calculate_speed_tylers_version(speed)
+                speed_value = calculate_speed_tylers_version_2(speed)
 
                 PnL = (research_value * scale_value * speed_value) - (BUDGET * (percentage_used / 100))
                 print(f"research: {research} scale: {scale} speed: {speed} percentage used: {percentage_used} PnL: {PnL}")
