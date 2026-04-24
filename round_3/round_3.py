@@ -1,6 +1,6 @@
 from datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List
-from numpy import mean, std, log
+from numpy import mean, std, log, diff
 from math import floor, ceil, sqrt, e
 from statistics import fmean, NormalDist
 from jsonpickle import encode, decode
@@ -84,26 +84,33 @@ class Ash_Coated_Osmium(Product):
 class Voucher(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit, previous_EMA):
         super().__init__(product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit)
+
+        # TODO: Change this when this options product is released
+        self.ITERATIONS_PER_DAY = 0
     
-    def calculate_predicted_option_price(best_bid, best_ask):
+    def calculate_predicted_option_price(self, best_bid, best_ask, strike_price, expiry_timestamp, current_timestamp):
         # Use the Black Scholes Model
         PLACEHOLDER = 0
-        # N = Cumulative distribution function of the standard normal distribution
 
         underlying_mid_price = (best_bid + best_ask) / 2
-        strike_price = PLACEHOLDER
-        expiry_time = PLACEHOLDER
-        volatility = PLACEHOLDER
-        interest_rate = PLACEHOLDER
+        expiry_time = max((expiry_timestamp - current_timestamp) / self.ITERATIONS_PER_DAY, 1e-6)
+        volatility = self.calculate_volatility()
+        interest_rate = 0
 
         d_1 = (log(underlying_mid_price / strike_price) + (((volatility ** 2) / 2) * expiry_time)) / (volatility * sqrt(expiry_time))
         d_2 = d_1 - (volatility * sqrt(expiry_time))
 
-        N_1 = NormalDist.cdf(d_1)
-        N_2 = NormalDist.cdf(d_2)
+        # N = Cumulative distribution function of the standard normal distribution
+        N = NormalDist(mu=0, sigma=1)
+        N_1 = N.cdf(d_1)
+        N_2 = N.cdf(d_2)
 
         predicted_option_price = (underlying_mid_price * N_1) - (strike_price * (e ** (-1 * interest_rate * expiry_time)) * N_2)
         return predicted_option_price
+
+    def calculate_volatility(self):
+        log_returns = diff(log(self.mid_order_history))
+        return std(log_returns) * sqrt(self.ITERATIONS_PER_DAY)
 
 class Strategy:
     def __init__(self, sell_order_history, buy_order_history, mid_order_history, current_positions, position_limits, previous_EMAs, intarian_pepper_root_intercept):
@@ -267,31 +274,54 @@ class Strategy:
         
         return orders
 
-    def trade_vouchers(self, state, order_depth):
+    def trade_vouchers(self, state, buy_orders, highest_buy_order, sell_orders, lowest_sell_order):
         voucher = self.product_info["VOUCHER"]
         product_name = voucher.product_name
         
-        best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
-        best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
-        spread = best_ask - best_bid
+        spread = abs(lowest_sell_order - highest_buy_order)
 
+        # TODO: Fix this function call to match the parameters
+        # self, best_bid, best_ask, strike_price, expiry_timestamp, current_timestamp
         predicted_option_price = voucher.calculate_predicted_option_price(best_bid, best_ask)
 
-        acceptable_buy_price = predicted_option_price - (spread / 2)
-        acceptable_sell_price = predicted_option_price + (spread / 2)
+        max_spread_allowed = 5
+        offset = min(spread / 2, max_spread_allowed)
+
+        acceptable_buy_price = predicted_option_price - offset
+        acceptable_sell_price = predicted_option_price + offset
+
+        current_position_duplicate = voucher.current_position
+        remaining_buy_capacity = voucher.position_limit - voucher.current_position
+        remaining_sell_capacity = voucher.position_limit + voucher.current_position
 
         # Orders to return back
         orders: List[Order] = []
 
         for ask, ask_amount in list(order_depth.sell_orders.items()):
+            if remaining_buy_capacity <= 0:
+                break
+
             if ask < acceptable_buy_price:
-                print(f"BUY voucher: {str(-ask_amount)} x {acceptable_buy_price}")
-                orders.append(Order(product_name, ask, -ask_amount))
+                amount_to_buy = min(abs(ask_amount), remaining_buy_capacity, 30)
+
+                print(f"BUY voucher: {str(amount_to_buy)} x {ask}")
+
+                orders.append(Order(product_name, ask, amount_to_buy))
+                remaining_buy_capacity -= amount_to_buy
+                current_position_duplicate += amount_to_buy
 
         for bid, bid_amount in list(order_depth.buy_orders.items()):
+            if remaining_sell_capacity <= 0:
+                break
+
             if bid > acceptable_sell_price:
-                print(f"SELL voucher: {str(bid_amount)} x {acceptable_sell_price}")
-                orders.append(Order(product_name, bid, -bid_amount))
+                amount_to_sell = min(bid_amount, remaining_sell_capacity, 30)
+
+                print(f"SELL voucher: {str(amount_to_sell)} x {bid}")
+
+                orders.append(Order(product_name, bid, -amount_to_sell))
+                remaining_buy_capacity -= amount_to_sell
+                current_position_duplicate -= amount_to_sell
         
         return orders
 
@@ -447,3 +477,4 @@ class Trader:
             sell_orders_absolute_value.append((price, abs(volume)))
 
         return sorted(sell_orders_absolute_value)
+
