@@ -6,6 +6,62 @@ from statistics import fmean
 from jsonpickle import encode, decode
 import string
 
+# This is a class to house currently-unused functions that we might consider looking into in the future
+class Functions_Storage:
+    def voucher_makes_sense(voucher_amount, most_recent_volcanic_rock_sell_order):
+        upper_bound = most_recent_volcanic_rock_sell_order * 1.02
+        lower_bound = most_recent_volcanic_rock_sell_order * 0.98
+
+        if voucher_amount < upper_bound and voucher_amount > lower_bound:
+            print(f"Voucher amount {voucher_amount} DOES (YES) makes sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+            return True
+        
+        print(f"Voucher amount {voucher_amount} DOES NOT (NO) make sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+        return False
+    
+    def buy_to_bot(orders, current_position, position_limit, product, best_ask, best_ask_amount):
+        if current_position - best_ask_amount <= position_limit:
+            orders.append(Order(product, best_ask, -1 * best_ask_amount))
+
+    def sell_to_bot(orders, current_position, position_limit, product, best_bid, best_bid_amount):
+        if current_position - best_bid_amount >= (-1 * position_limit):
+            orders.append(Order(product, best_bid, -1 * best_bid_amount))
+    
+    def big_dip_checker(sell_order_history, buy_order_history, current_mid_price, multiplier):
+        sell_average = mean(sell_order_history)
+        buy_average = mean(buy_order_history)
+        mid_average_value = (sell_average + buy_average) / 2
+
+        return current_mid_price > (mid_average_value * multiplier)
+
+    def small_dip_checker(sell_order_history, buy_order_history, recents_length, current_mid_price, multiplier):
+        sell_recents = sell_order_history
+        if len(sell_recents) > recents_length:
+            sell_recents = sell_recents[0:recents_length]
+        
+        sell_recents_average = mean(sell_recents)
+        
+        buy_recents = buy_order_history
+        if len(buy_recents) > recents_length:
+            buy_recents = buy_recents[0:recents_length]
+        
+        buy_recents_average = mean(buy_recents)
+
+        mid_recents_average = (sell_recents_average + buy_recents_average) / 2
+
+        #print(f"recents_average: {recents_average}")
+
+        return current_mid_price > (mid_recents_average * multiplier)
+    
+    def get_maximum_purchased_order_price(own_trades):
+        purchased_prices: list = []
+
+        for product in own_trades:
+            for trade_instance in own_trades[product]:
+                purchased_prices.append(trade_instance.price)
+        
+        return max(purchased_prices)
+
 class New_Data:
     def __init__(self, product_names, macaron_info):
         self.MAX_HISTORY_LENGTH = 150
