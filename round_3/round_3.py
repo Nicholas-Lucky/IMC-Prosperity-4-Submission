@@ -66,6 +66,7 @@ class Product:
         self.acceptable_buy_price = None
         self.acceptable_sell_price = None
 
+""" NO LONGER IN USE """
 class Intarian_Pepper_Root(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit, intercept):
         super().__init__(product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit)
@@ -80,10 +81,30 @@ class Intarian_Pepper_Root(Product):
 class Ash_Coated_Osmium(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit, previous_EMA):
         super().__init__(product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit)
+""" ---------------- """
 
-class Voucher(Product):
+class Hydrogel_Pack(Product):
     def __init__(self, product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit, previous_EMA):
         super().__init__(product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit)
+
+class Velvetfruit_Extract_Voucher(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit, previous_EMA):
+        super().__init__(product_name, sell_order_history, buy_order_history, mid_order_history, current_position, position_limit)
+
+        self.all_voucher_strike_prices = {
+            "VEV_4000": 4000,
+            "VEV_4500": 4500,
+            "VEV_5000": 5000,
+            "VEV_5100": 5100,
+            "VEV_5200": 5200,
+            "VEV_5300": 5300,
+            "VEV_5400": 5400,
+            "VEV_5500": 5500,
+            "VEV_6000": 6000,
+            "VEV_6500": 6500
+        }
+
+        self.strike_price = self.all_voucher_strike_prices[product_name]
 
         # TODO: Change this when this options product is released
         self.ITERATIONS_PER_DAY = 0
@@ -113,98 +134,45 @@ class Voucher(Product):
         return std(log_returns) * sqrt(self.ITERATIONS_PER_DAY)
 
 class Strategy:
+    def velvetfruit_extract_voucher_helper(self, voucher_name, sell_order_history, buy_order_history, mid_order_history, current_positions, position_limits, previous_EMAs):
+        self.product_info[voucher_name] = Velvetfruit_Extract_Voucher(voucher_name,
+                                                                        sell_order_history[voucher_name],
+                                                                        buy_order_history[voucher_name],
+                                                                        mid_order_history[voucher_name],
+                                                                        current_positions[voucher_name],
+                                                                        position_limits[voucher_name],
+                                                                        previous_EMAs[voucher_name])
+
     def __init__(self, sell_order_history, buy_order_history, mid_order_history, current_positions, position_limits, previous_EMAs, intarian_pepper_root_intercept):
         self.product_info = {}
-
-        self.product_info["INTARIAN_PEPPER_ROOT"] = Intarian_Pepper_Root("INTARIAN_PEPPER_ROOT",
-                                                                         sell_order_history["INTARIAN_PEPPER_ROOT"],
-                                                                         buy_order_history["INTARIAN_PEPPER_ROOT"],
-                                                                         mid_order_history["INTARIAN_PEPPER_ROOT"],
-                                                                         current_positions["INTARIAN_PEPPER_ROOT"],
-                                                                         position_limits["INTARIAN_PEPPER_ROOT"],
-                                                                         intarian_pepper_root_intercept)
-
-        self.product_info["ASH_COATED_OSMIUM"] = Ash_Coated_Osmium("ASH_COATED_OSMIUM",
-                                                                   sell_order_history["ASH_COATED_OSMIUM"],
-                                                                   buy_order_history["ASH_COATED_OSMIUM"],
-                                                                   mid_order_history["ASH_COATED_OSMIUM"],
-                                                                   current_positions["ASH_COATED_OSMIUM"],
-                                                                   position_limits["ASH_COATED_OSMIUM"],
-                                                                   previous_EMAs["ASH_COATED_OSMIUM"])
+        self.available_velvetfruit_extract_vouchers = ["VEV_4000", "VEV_4500", "VEV_5000", "VEV_5100", "VEV_5200", "VEV_5300", "VEV_5400", "VEV_5500", "VEV_6000", "VEV_6500"]
         
-        self.product_info["VOUCHER"] = Voucher("VOUCHER",
-                                               sell_order_history["VOUCHER"],
-                                               buy_order_history["VOUCHER"],
-                                               mid_order_history["VOUCHER"],
-                                               current_positions["VOUCHER"],
-                                               position_limits["VOUCHER"],
-                                               previous_EMAs["VOUCHER"])
-
-    def trade_intarian_pepper_root(self, state, buy_orders, highest_buy_order, sell_orders, lowest_sell_order, current_mid_price):
-        intarian_pepper_root = self.product_info["INTARIAN_PEPPER_ROOT"]
-        product_name = intarian_pepper_root.product_name
-
-        if intarian_pepper_root.intercept is None:
-            intarian_pepper_root.intercept = round((current_mid_price - intarian_pepper_root.drift * state.timestamp) / 1000) * 1000
-
-        fair_value = intarian_pepper_root.intercept + intarian_pepper_root.drift * state.timestamp
-        remaining_buy_capacity = intarian_pepper_root.position_limit - intarian_pepper_root.current_position
+        self.product_info["HYDROGEL_PACK"] = Hydrogel_Pack("HYDROGEL_PACK",
+                                                           sell_order_history["HYDROGEL_PACK"],
+                                                           buy_order_history["HYDROGEL_PACK"],
+                                                           mid_order_history["HYDROGEL_PACK"],
+                                                           current_positions["HYDROGEL_PACK"],
+                                                           position_limits["HYDROGEL_PACK"],
+                                                           previous_EMAs["HYDROGEL_PACK"])
         
-        current_position_duplicate = intarian_pepper_root.current_position
+        for voucher_name in self.available_velvetfruit_extract_vouchers:
+            self.velvetfruit_extract_voucher_helper(voucher_name, sell_order_history, buy_order_history, mid_order_history, current_positions, position_limits, previous_EMAs)
 
-        # Orders to return back
-        orders: List[Order] = []
-
-        # Buy everything as long as the price is <= fair_value + 7
-        for ask, ask_amount in sell_orders:
-            if remaining_buy_capacity <= 0:
-                break
-
-            if ask <= int(fair_value) + 7:
-                amount_to_buy = min(ask_amount, remaining_buy_capacity)
-
-                if amount_to_buy > 0:
-                    orders.append(Order(product_name, ask, amount_to_buy))
-                    remaining_buy_capacity -= amount_to_buy
+    def trade_hydrogel_pack(self, buy_orders, highest_buy_order, sell_orders, lowest_sell_order, order_book_imbalance):
+        hydrogel_pack = self.product_info["HYDROGEL_PACK"]
+        product_name = hydrogel_pack.product_name
         
-        # Sell if there is a small dip (highest_buy_order > fair_value - 1) in case of crashes
-        if remaining_buy_capacity > 0:
-            sell_threshold = int(fair_value) - 1
-
-            if sell_threshold < lowest_sell_order:
-                amount_to_sell = min(remaining_buy_capacity, 40)
-                orders.append(Order(product_name, sell_threshold, amount_to_sell))
-        
-        # Also sell if the price is super high (>= fair_value + 8) and if we're at the position limit
-        # (we could sell anyway and get more profit than normal)
-        if current_position_duplicate >= intarian_pepper_root.position_limit:
-            remaining_sell_capacity = intarian_pepper_root.position_limit + current_position_duplicate
-
-            for bid, bid_amount in buy_orders:
-                if bid >= int(fair_value) + 8 and current_position_duplicate > 60 and remaining_sell_capacity > 0:
-                    amount_to_sell = min(bid_amount, current_position_duplicate - 60, remaining_sell_capacity)
-
-                    if amount_to_sell > 0:
-                        orders.append(Order(product_name, bid, -amount_to_sell))
-                        remaining_sell_capacity -= amount_to_sell
-                        current_position_duplicate -= amount_to_sell
-        
-        return orders
-    
-    def trade_ash_coated_osmium(self, buy_orders, highest_buy_order, sell_orders, lowest_sell_order, order_book_imbalance):
-        ash_coated_osmium = self.product_info["ASH_COATED_OSMIUM"]
-        product_name = ash_coated_osmium.product_name
-        
-        recent_mid_prices = ash_coated_osmium.mid_order_history[-20:]
+        recent_mid_prices = hydrogel_pack.mid_order_history[-20:]
         fair_value = mean(recent_mid_prices)
-        mispriced_threshold = fair_value + 2.0 * order_book_imbalance
+        # mispriced_threshold = fair_value + 2.0 * order_book_imbalance
+        mispriced_threshold = fair_value + 0.5 * order_book_imbalance
 
-        current_position_duplicate = ash_coated_osmium.current_position
+        current_position_duplicate = hydrogel_pack.current_position
 
         # Orders to return back
         orders: List[Order] = []
-        remaining_buy_capacity = ash_coated_osmium.position_limit - current_position_duplicate
-        remaining_sell_capacity = ash_coated_osmium.position_limit + current_position_duplicate
+        remaining_buy_capacity = hydrogel_pack.position_limit - current_position_duplicate
+        remaining_sell_capacity = hydrogel_pack.position_limit + current_position_duplicate
 
         # Buy mispriced prices
         for ask, ask_amount in sell_orders:
@@ -233,8 +201,8 @@ class Strategy:
                     current_position_duplicate -= amount_to_sell
         
         # Market making strategy in addition to the mispriced strategy
-        spread = 2
-        position_skew = 0.10
+        spread = abs(lowest_sell_order - highest_buy_order)
+        position_skew = 0.15
 
         position_shift = -current_position_duplicate * position_skew
         acceptable_buy_price = int(fair_value + position_shift - spread)
@@ -246,8 +214,8 @@ class Strategy:
         if acceptable_sell_price <= highest_buy_order:
             acceptable_sell_price = highest_buy_order + 1
 
-        buy_factor = max(0.0, remaining_buy_capacity / ash_coated_osmium.position_limit)
-        sell_factor = max(0.0, remaining_sell_capacity / ash_coated_osmium.position_limit)
+        buy_factor = max(0.0, remaining_buy_capacity / hydrogel_pack.position_limit)
+        sell_factor = max(0.0, remaining_sell_capacity / hydrogel_pack.position_limit)
 
         buy_size = int(30 * buy_factor)
         sell_size = int(30 * sell_factor)
@@ -274,8 +242,8 @@ class Strategy:
         
         return orders
 
-    def trade_vouchers(self, state, buy_orders, highest_buy_order, sell_orders, lowest_sell_order):
-        voucher = self.product_info["VOUCHER"]
+    def trade_velvetfruit_extract_vouchers(self, state, buy_orders, highest_buy_order, sell_orders, lowest_sell_order):
+        voucher = self.product_info["VELVETFRUIT_EXTRACT_VOUCHER"]
         product_name = voucher.product_name
         
         spread = abs(lowest_sell_order - highest_buy_order)
@@ -327,12 +295,32 @@ class Strategy:
 
 class Trader:
     def __init__(self):
-        self.PRODUCT_NAMES = ["INTARIAN_PEPPER_ROOT",
-                              "ASH_COATED_OSMIUM"]
+        self.PRODUCT_NAMES = ["HYDROGEL_PACK",
+                              "VELVETFRUIT_EXTRACT",
+                              "VEV_4000",
+                              "VEV_4500",
+                              "VEV_5000",
+                              "VEV_5100",
+                              "VEV_5200",
+                              "VEV_5300",
+                              "VEV_5400",
+                              "VEV_5500",
+                              "VEV_6000",
+                              "VEV_6500"]
 
         self.POSITION_LIMITS = {
-            "INTARIAN_PEPPER_ROOT": 80,
-            "ASH_COATED_OSMIUM": 80
+            "HYDROGEL_PACK": 200,
+            "VELVETFRUIT_EXTRACT": 200,
+            "VEV_4000": 300,
+            "VEV_4500": 300,
+            "VEV_5000": 300,
+            "VEV_5100": 300,
+            "VEV_5200": 300,
+            "VEV_5300": 300,
+            "VEV_5400": 300,
+            "VEV_5500": 300,
+            "VEV_6000": 300,
+            "VEV_6500": 300
         }
 
         self.MACARON_INFO = ["askPrice",
@@ -427,14 +415,17 @@ class Trader:
             
 
 
-            """ Calculate the order book imbalance (currently for the ASH_COATED_OSMIUM) """
+            """ Calculate the order book imbalance (currently for the HYDROGEL_PACK) """
             order_book_imbalance = (best_bid_amount - best_ask_amount) / (best_bid_amount + best_ask_amount + 1e-9)
 
 
 
+            if product == "VELVETFRUIT_EXTRACT_VOUCHER":
+                print(order_depth.sell_orders)
+
             """ Skip any products we don't want to trade for now """
-            # products_we_want_to_trade: list[str] = ["INTARIAN_PEPPER_ROOT", "ASH_COATED_OSMIUM"]
-            products_we_want_to_trade: list[str] = ["INTARIAN_PEPPER_ROOT", "ASH_COATED_OSMIUM"]
+            # products_we_want_to_trade: list[str] = ["HYDROGEL_PACK", "VELVETFRUIT_EXTRACT", "VELVETFRUIT_EXTRACT_VOUCHER"]
+            products_we_want_to_trade: list[str] = ["HYDROGEL_PACK"]
 
             if product not in products_we_want_to_trade:
                 continue
@@ -445,14 +436,8 @@ class Trader:
             This is still in the for product in state.order_depths for loop
             Make our orders, and put those orders in result for that respective product
             """
-            if product == "INTARIAN_PEPPER_ROOT":
-                result[product] = strategy.trade_intarian_pepper_root(state, sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, current_mid_price)
-
-                """ Update the intercept for the Intarian Pepper Root """
-                self.new_data.intarian_pepper_root_intercept = strategy.product_info[product].intercept
-            
-            elif product == "ASH_COATED_OSMIUM":
-                result[product] = strategy.trade_ash_coated_osmium(sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, order_book_imbalance)
+            if product == "HYDROGEL_PACK":
+                result[product] = strategy.trade_hydrogel_pack(sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, order_book_imbalance)
 
             else:
                 return []
