@@ -220,12 +220,10 @@ class Strategy:
         if hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1] and hydrogel_pack.mid_order_history[-3] <= hydrogel_pack.mid_order_history[-1]:
             orders.append(Order(product_name, highest_buy_order + 1, min(buy_size, remaining_buy_capacity)))
             orders.append(Order(product_name, lowest_sell_order - 1, -min(buy_size, remaining_buy_capacity)))
-        else:
-            # Sell some to be safe so we're not holding things too much
-            if current_position_duplicate > 5:
-                for i in range(1, 6):
-                    # orders.append(Order(product_name, lowest_sell_order - 1, -5))
-                    orders.append(Order(product_name, lowest_sell_order - i, -(int(current_position_duplicate / 5))))
+        
+        # Sell some to be safe so we're not holding things too much
+        elif current_position_duplicate > 5:
+            orders.append(Order(product_name, lowest_sell_order - 1, -5))
 
         return orders
 

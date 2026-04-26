@@ -37,7 +37,8 @@ def calculate_optimal_bids(avg_b2):
         
         # If there are still counterparty orders that have not yet been traded with:
         if b1 <= MAXIMUM_BID - RESERVE_PRICE_INCREMENT:
-            current_b2, current_b2_profit =  calculate_optimal_second_bid(avg_b2, starting_bid=b1)
+            # current_b2, current_b2_profit =  calculate_optimal_second_bid(avg_b2, starting_bid=b1)
+            current_b2, current_b2_profit =  calculate_set_second_bid(avg_b2, 912, starting_bid=b1)
 
         # Calculate the total profit and compare
         current_total_profit = current_b1_profit + current_b2_profit
@@ -78,6 +79,23 @@ def calculate_optimal_second_bid(avg_b2, starting_bid):
             optimal_b2 = b2
     
     return (optimal_b2, optimal_b2_profit)
+
+def calculate_set_second_bid(avg_b2, second_bid, starting_bid):
+    b2_profit = 0
+    b2 = second_bid
+
+    next_starting_reserve_price = starting_bid + (RESERVE_PRICE_INCREMENT - (starting_bid % RESERVE_PRICE_INCREMENT))
+    for reserve_price in range(next_starting_reserve_price, MAXIMUM_RESERVE_PRICE + 1, RESERVE_PRICE_INCREMENT):
+        # If the first bid is higher than the reserve price, they trade with you at your first bid
+        if b2 > reserve_price:
+            penalty_multiplier = 1
+
+            if b2 <= avg_b2:
+                penalty_multiplier = ((SELL_AMOUNT - avg_b2) / (SELL_AMOUNT - b2)) ** 3
+
+            b2_profit += ((SELL_AMOUNT - b2) * penalty_multiplier)
+    
+    return (b2, b2_profit)
 
 def get_average_bid(bids, associated_percentages):
     avg_b2 = 0
