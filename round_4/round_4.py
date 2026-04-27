@@ -203,14 +203,14 @@ class Strategy:
 
         position_shift = -current_position_duplicate * position_skew
 
-        acceptable_buy_price = int(ema + position_shift - (spread / 2))
-        acceptable_sell_price = int(ema + position_shift + (spread / 2)) + 1
+        # acceptable_buy_price = int(ema + position_shift - (spread / 2))
+        # acceptable_sell_price = int(ema + position_shift + (spread / 2)) + 1
 
-        if acceptable_buy_price >= lowest_sell_order:
-            acceptable_buy_price = lowest_sell_order - 1
+        # if acceptable_buy_price >= lowest_sell_order:
+        #     acceptable_buy_price = lowest_sell_order - 1
         
-        if acceptable_sell_price <= highest_buy_order:
-            acceptable_sell_price = highest_buy_order + 1
+        # if acceptable_sell_price <= highest_buy_order:
+        #     acceptable_sell_price = highest_buy_order + 1
 
         buy_factor = max(0.0, remaining_buy_capacity / hydrogel_pack.position_limit)
         sell_factor = max(0.0, remaining_sell_capacity / hydrogel_pack.position_limit)
@@ -228,8 +228,16 @@ class Strategy:
         more_recent_average = mean(hydrogel_pack.mid_order_history[-3:])
         less_recent_average = mean(hydrogel_pack.mid_order_history[-8:])
 
-        test_buy = fair_value - (spread / 8)
-        test_sell = fair_value + (spread / 8)
+        # test_buy = fair_value - (spread / 8)
+        # test_sell = fair_value + (spread / 8)
+
+        acceptable_buy_price = int(((ema + fair_value) / 2) - (spread / 8))
+        acceptable_sell_price = int(((ema + fair_value) / 2) + (spread / 8))
+
+        if acceptable_buy_price > highest_buy_order:
+            orders.append(Order(product_name, int(acceptable_buy_price), min(buy_size, remaining_buy_capacity, 30)))
+        if acceptable_sell_price < lowest_sell_order:
+            orders.append(Order(product_name, int(acceptable_sell_price), min(sell_size, remaining_sell_capacity, 30)))
 
         # if test_buy > highest_buy_order and hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1]:
         #     orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
@@ -243,7 +251,7 @@ class Strategy:
         #     orders.append(Order(product_name, int(test_sell), min(sell_size, remaining_sell_capacity, -30)))
         #     pass
 
-        orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
+        # orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
         # orders.append(Order(product_name, int(test_sell - (spread / 8)), min(sell_size, remaining_sell_capacity, -30)))
 
 
