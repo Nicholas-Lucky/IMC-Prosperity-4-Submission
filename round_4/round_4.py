@@ -183,6 +183,8 @@ class Strategy:
         product_name = hydrogel_pack.product_name
         
         recent_mid_prices = hydrogel_pack.mid_order_history[-20:]
+        current_mid_price = (highest_buy_order + lowest_sell_order) / 2
+
         fair_value = mean(recent_mid_prices)
         # mispriced_threshold = fair_value + 2.0 * order_book_imbalance
         mispriced_threshold = fair_value + 0.5 * order_book_imbalance
@@ -216,6 +218,12 @@ class Strategy:
         buy_size = int(15 * buy_factor)
         sell_size = int(15 * sell_factor)
 
+        """
+        From the practice submissions in Round 4:
+            Only selling = spike UP at the end
+            Only buying = spike DOWN at the end
+        """
+
         # If we're not in a downward trend
         more_recent_average = mean(hydrogel_pack.mid_order_history[-3:])
         less_recent_average = mean(hydrogel_pack.mid_order_history[-8:])
@@ -223,13 +231,21 @@ class Strategy:
         test_buy = fair_value - (spread / 8)
         test_sell = fair_value + (spread / 8)
 
-        if test_buy > highest_buy_order:
-            # orders.append(Order(product_name, highest_buy_order + 1, min(buy_size, remaining_buy_capacity)))
-            orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
+        # if test_buy > highest_buy_order and hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1]:
+        #     orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
+        #     pass
+        # else:
+        #     orders.append(Order(product_name, int(test_sell) - 1, -5))
+        #     pass
 
-        if test_sell < lowest_sell_order:
-            # orders.append(Order(product_name, lowest_sell_order - 1, min(buy_size, remaining_buy_capacity)))
-            orders.append(Order(product_name, int(test_sell), min(sell_size, remaining_sell_capacity, 30)))
+        # # if (test_sell < lowest_sell_order and test_sell > current_mid_price) or True:
+        # if test_sell > lowest_sell_order and test_sell > current_mid_price:
+        #     orders.append(Order(product_name, int(test_sell), min(sell_size, remaining_sell_capacity, -30)))
+        #     pass
+
+        orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
+        # orders.append(Order(product_name, int(test_sell - (spread / 8)), min(sell_size, remaining_sell_capacity, -30)))
+
 
         # # if hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1] and hydrogel_pack.mid_order_history[-3] <= hydrogel_pack.mid_order_history[-1]:
         # if more_recent_average >= less_recent_average * 1.05 and False:
