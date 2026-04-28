@@ -231,13 +231,19 @@ class Strategy:
         # test_buy = fair_value - (spread / 8)
         # test_sell = fair_value + (spread / 8)
 
-        acceptable_buy_price = int(((ema + fair_value) / 2) - (spread / 8))
-        acceptable_sell_price = int(((ema + fair_value) / 2) + (spread / 8))
+        # acceptable_buy_price = int(((ema + fair_value) / 2) - (spread / 8))
+        # acceptable_sell_price = int(((ema + fair_value) / 2) + (spread / 8))
 
-        if acceptable_buy_price > highest_buy_order:
-            orders.append(Order(product_name, int(acceptable_buy_price), min(buy_size, remaining_buy_capacity, 30)))
-        if acceptable_sell_price < lowest_sell_order:
-            orders.append(Order(product_name, int(acceptable_sell_price), min(sell_size, remaining_sell_capacity, 30)))
+        adjusted_fair_value = (0.2 * fair_value) + (0.8 * ema)
+        acceptable_buy_price = int(adjusted_fair_value - (spread / 8))
+        acceptable_sell_price = int(adjusted_fair_value + (spread / 8))
+
+        if acceptable_sell_price > current_mid_price:  # Selling
+            # orders.append(Order(product_name, int(lowest_sell_order - 1), -min(sell_size, remaining_sell_capacity, 30)))
+            orders.append(Order(product_name, int(lowest_sell_order - 1), -(int(remaining_sell_capacity / 2))))
+        elif acceptable_buy_price > highest_buy_order:  # Buying
+            # orders.append(Order(product_name, int(highest_buy_order + 1), min(buy_size, remaining_buy_capacity, 30)))
+            orders.append(Order(product_name, int(highest_buy_order + 1), int(remaining_buy_capacity / 2)))
 
         # if test_buy > highest_buy_order and hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1]:
         #     orders.append(Order(product_name, int(test_buy), min(buy_size, remaining_buy_capacity, 30)))
