@@ -41,9 +41,7 @@ class Strategy:
     def __init__(self):
         pass
 
-    def calculate_EMA(self, product_name, new_data, best_bid, best_ask):
-        alpha = 0.3
-
+    def calculate_EMA(self, product_name, new_data, best_bid, best_ask, alpha=0.3):
         current_mid_price = (best_bid + best_ask) / 2
 
         if new_data.previous_EMAs[product_name] == []:
@@ -129,7 +127,7 @@ class Strategy:
         remaining_sell_capacity = position_limit_duplicate + current_position_duplicate
         
         # Market making strategy in addition to the mispriced strategy
-        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask)
+        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask, alpha=0.7)
         spread = abs(best_bid - best_ask)
         position_skew = 0.15
 
@@ -142,10 +140,13 @@ class Strategy:
         sell_size = int(10 * sell_factor)
 
         # If we're not in a downward trend
-        more_recent_average = mean(mid_order_history[-5:])
-        less_recent_average = mean(mid_order_history[-10:])
+        # more_recent_average = mean(mid_order_history[-5:])
+        # less_recent_average = mean(mid_order_history[-10:])
+
+        more_recent_average = mean(previous_EMAs[-5:])
+        less_recent_average = mean(previous_EMAs[-10:])
         
-        # 30% fair value and 70% ema seems like the sweet spot
+        # 10% fair value and 90% ema seems like the sweet spot
         adjusted_fair_value = (0.1 * fair_value) + (0.9 * ema)
 
         acceptable_buy_price = int(adjusted_fair_value - 1)
@@ -153,8 +154,69 @@ class Strategy:
 
         # Only trade when we are in an upward trend
         if more_recent_average > less_recent_average:
-            if acceptable_sell_price < best_ask and acceptable_sell_price > current_mid_price:  # Selling
-                amount_to_sell = min(buy_size, remaining_buy_capacity)
+            if acceptable_sell_price > current_mid_price:  # Selling
+                amount_to_sell = min(sell_size, remaining_sell_capacity)
+                orders.append(Order(product_name, int(acceptable_sell_price), -amount_to_sell))
+
+            if acceptable_buy_price > best_bid and acceptable_buy_price < current_mid_price:  # Buying
+                amount_to_buy = min(buy_size, remaining_buy_capacity)
+                orders.append(Order(product_name, int(acceptable_buy_price), amount_to_buy))
+        
+        # If we are in a downward trend, get our position to 0 as fast as possible
+        elif current_position_duplicate != 0:
+            orders.append(Order(product_name, int(current_mid_price), -current_position_duplicate))
+
+        return orders
+
+    def trade_galaxy_sounds(self, product_name, new_data, sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, order_book_imbalance):
+        mid_order_history = new_data.mid_order_history[product_name]
+        previous_EMAs = new_data.previous_EMAs[product_name]
+        
+        recent_mid_prices = mid_order_history[-20:]
+        current_mid_price = (best_bid + best_ask) / 2
+
+        fair_value = mean(recent_mid_prices)
+        
+        mispriced_threshold = fair_value + 0.5 * order_book_imbalance
+
+        current_position_duplicate = new_data.current_positions[product_name]
+        position_limit_duplicate = 10
+
+        # Orders to return back
+        orders: List[Order] = []
+        remaining_buy_capacity = position_limit_duplicate - current_position_duplicate
+        remaining_sell_capacity = position_limit_duplicate + current_position_duplicate
+        
+        # Market making strategy in addition to the mispriced strategy
+        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask, alpha=0.2)
+        spread = abs(best_bid - best_ask)
+        position_skew = 0.15
+
+        position_shift = -current_position_duplicate * position_skew
+
+        buy_factor = max(0.0, remaining_buy_capacity / position_limit_duplicate)
+        sell_factor = max(0.0, remaining_sell_capacity / position_limit_duplicate)
+
+        buy_size = int(10 * buy_factor)
+        sell_size = int(10 * sell_factor)
+
+        # If we're not in a downward trend
+        more_recent_average = mean(previous_EMAs[-5:])
+        less_recent_average = mean(previous_EMAs[-10:])
+        
+        # 10% fair value and 90% ema seems like the sweet spot
+        adjusted_fair_value = (0.1 * fair_value) + (0.9 * ema)
+
+        # acceptable_buy_price = int(adjusted_fair_value - 1)
+        # acceptable_sell_price = int(adjusted_fair_value + 1)
+
+        acceptable_buy_price = int(adjusted_fair_value - (spread / 8))
+        acceptable_sell_price = int(adjusted_fair_value + (spread / 8))
+
+        # Only trade when we are in an upward trend
+        if more_recent_average > less_recent_average:
+            if acceptable_sell_price > current_mid_price:  # Selling
+                amount_to_sell = min(sell_size, remaining_sell_capacity)
                 orders.append(Order(product_name, int(acceptable_sell_price), -amount_to_sell))
 
             if acceptable_buy_price > best_bid and acceptable_buy_price < current_mid_price:  # Buying
@@ -273,7 +335,8 @@ class Trader:
 
             """ Skip any products we don't want to trade for now """
             # products_we_want_to_trade: list[str] = ["SNACKPACK_CHOCOLATE", "SNACKPACK_VANILLA", "SNACKPACK_PISTACHIO", "SNACKPACK_STRAWBERRY", "SNACKPACK_RASPBERRY"]
-            products_we_want_to_trade: list[str] = ["PEBBLES_XS", "PEBBLES_S", "PEBBLES_M", "PEBBLES_L", "PEBBLES_XL"]
+            # products_we_want_to_trade: list[str] = ["PEBBLES_XS", "PEBBLES_S", "PEBBLES_M", "PEBBLES_L", "PEBBLES_XL"]
+            products_we_want_to_trade: list[str] = ["SNACKPACK_CHOCOLATE", "SNACKPACK_VANILLA", "SNACKPACK_PISTACHIO", "SNACKPACK_STRAWBERRY", "SNACKPACK_RASPBERRY", "GALAXY_SOUNDS_DARK_MATTER", "GALAXY_SOUNDS_BLACK_HOLES", "GALAXY_SOUNDS_PLANETARY_RINGS", "GALAXY_SOUNDS_SOLAR_WINDS", "GALAXY_SOUNDS_SOLAR_FLAMES"]
 
             if product not in products_we_want_to_trade:
                 continue
@@ -289,6 +352,9 @@ class Trader:
             
             elif product in ["PEBBLES_XS", "PEBBLES_S", "PEBBLES_M", "PEBBLES_L", "PEBBLES_XL"]:
                 result[product] = strategy.trade_pebbles(product, self.new_data, sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, order_book_imbalance)
+
+            elif product in ["GALAXY_SOUNDS_DARK_MATTER", "GALAXY_SOUNDS_BLACK_HOLES", "GALAXY_SOUNDS_PLANETARY_RINGS", "GALAXY_SOUNDS_SOLAR_WINDS", "GALAXY_SOUNDS_SOLAR_FLAMES"]:
+                result[product] = strategy.trade_galaxy_sounds(product, self.new_data, sorted_buy_orders, best_bid, sorted_sell_orders, best_ask, order_book_imbalance)
 
             else:
                 return []
@@ -310,4 +376,3 @@ class Trader:
             sell_orders_absolute_value.append((price, abs(volume)))
 
         return sorted(sell_orders_absolute_value)
-

@@ -12,8 +12,8 @@ predicted_sentiments = {
     'Magma ink': '++',
     'Scoria paste': '+',
     'Ashes of the Phoenix': '---',
-    'Volcanic incense': '---',
-    'Sulfur reactor': '+'
+    'Volcanic incense': '-',
+    'Sulfur reactor': '++'
 }
 
 def get_historical_gabsens_picked_sentiments_info():
@@ -116,15 +116,15 @@ def get_scenario_2_sentiments_info():
 def get_scenario_3_sentiments_info():
     sentiment_multipliers = {
         '+++++': 0.4,
-        '++++': 0.18,
+        '++++': 0.20,
         '+++': 0.14,
-        '++': 0.025,
+        '++': 0.05,
         '+': 0.002,
-        '-': -0.005,
-        '--': -0.07,
-        '---': -0.18,
-        '----': -0.35,
-        '-----': -0.55
+        '-': -0.02,
+        '--': -0.08,
+        '---': -0.2,
+        '----': -0.4,
+        '-----': -0.60
     }
 
     return predicted_sentiments, sentiment_multipliers
@@ -182,7 +182,7 @@ def print_format_two(products, optimal_profits, initial_capital):
 sentiments, sentiment_multipliers = get_scenario_3_sentiments_info()
 
 products = list(sentiments.keys())
-# product_multipliers = make_product_multipliers(sentiments, sentiment_multipliers)
+product_multipliers = make_product_multipliers(sentiments, sentiment_multipliers)
 
 # Override the multipliers with this for faster testing
 # product_multipliers = {
@@ -220,6 +220,9 @@ for product in products:
         # In the GitHub: profit = 7500 * r_i * pi_i - fee
         fee = (pi_i / 100) * (pi_i / 100) * initial_capital
         profit = (initial_capital * r_i * (pi_i / 100)) - fee
+
+        # Penalize larger allocations to simulate other teams going higher allocations as well
+        profit *= ((100 - (abs(pi_i) / 2)) / 100)
 
         if optimal_profits.get(product) is None:
             optimal_profits[product] = [pi_i, profit]
