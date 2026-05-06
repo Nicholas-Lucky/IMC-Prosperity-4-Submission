@@ -1,17 +1,122 @@
-# IMC Prosperity 3 (2025) Submission
+# IMC Prosperity 4 (2026) Submission
 ### Note: This writeup is heavily inspired by the [Alpha Animals](https://github.com/CarterT27/imc-prosperity-3), [CMU Physics](https://github.com/chrispyroberts/imc-prosperity-3), and [Byeongguk Kang, Minwoo Kim, and Uihyung Lee](https://github.com/pe049395/IMC-Prosperity-2024)'s writeups.
 ---
-### Team Name: Salty Seagulls
+### Team Name: QuantCrow
 
 ### Team Members:
 1. Tyler Thomas ([LinkedIn](https://www.linkedin.com/in/tyler-b-thomas/), [GitHub](https://github.com/TylerThomas6))
-2. Lismarys Cabrales ([LinkedIn](https://www.linkedin.com/in/lismaryscabrales/), [GitHub](https://github.com/ikozmicx))
-3. Nicholas Lucky ([LinkedIn](https://www.linkedin.com/in/nicholas-lucky/), [GitHub](https://github.com/Nicholas-Lucky))
+2. Nicholas Lucky ([LinkedIn](https://www.linkedin.com/in/nicholas-lucky/), [GitHub](https://github.com/Nicholas-Lucky))
 ---
 ## Overview
-#### [IMC's Prosperity 2025](https://prosperity.imc.com/) is an annual trading challenge that challenges participants to program an algorithm to trade various goods on a virtual trading market — with the goal of gaining as much profit, in the form of SeaShells, as possible. In addition to the algorithm, there are manual trading challenges that allow participants to gain additional seashells. The competition spans five rounds, with each round adding new products for our trading algorithms to consider, and a new manual trading challenge to attempt. This year is the third iteration of the competition (Prosperity 3), and lasted from April 7th, 2025 to April 22nd, 2025. This is our first year in the competition, and we focused on learning and gaining a (at least) general understanding of the competition and the programming and skills required to perform in both the trading algorithm and manual trading challenges.
+#### [IMC's Prosperity 2026](https://prosperity.imc.com/) is an annual trading challenge that challenges participants to program an algorithm to trade various goods on a virtual trading market with the goal of gaining as much profit, in the form of the XIREN currency, as possible. In addition to the algorithm, there are manual trading challenges that allow participants to gain additional seashells. The competition spans five rounds, with each round adding new products for our trading algorithms to consider, and a new manual trading challenge to attempt. This year, there is also an added "qualifier challenge" where teams need to make total profit of 200 thousand XIRENs in the first two rounds in order to continue competing in the third, forth, and fifth rounds. This year is the fourth iteration of the competition (Prosperity 4), and lasted from April 14th, 2026 to April 28nd, 2026. This is our second year in the competition, and we focused on continuing to learn and improve our skills in programming both an effective main trading algorithm and helpful manual trading-related code to aid us in our decision-making in the manual trading challenges.
 
-#### Further details on this year's competition can be found on the [Prosperity 3 Wiki](https://imc-prosperity.notion.site/Prosperity-3-Wiki-19ee8453a09380529731c4e6fb697ea4).
+#### Further details on this year's competition can be found on the [Prosperity 4 Wiki](https://imc-prosperity.notion.site/prosperity-4-wiki).
+---
+<details>
+<summary><h2>Tutorial Round 🍅</h2></summary>
+
+### Algorithmic Trading
+#### As mentioned in [the Tutorial Round of the wiki](https://imc-prosperity.notion.site/tutorial-round-simulator-practice), the Tutorial Round introduced us to two products: `EMERALDS` and `TOMATOES`. `EMERALDS` is said to be relatively stable product, while `TOMATOES` is said to be less stable and fluctuates over time. `EMERALDS` has a position limit of `80`, and `TOMATOES` has a position limit of `80`.
+
+#### Using the provided Data Capsule that allowed us to view historical prices of both `EMERALDS` and `TOMATOES`, we constructed the following price graphs of the two products:
+
+![emeralds_historical_prices_day_minus_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/emeralds_historical_prices_day_minus_2.png)
+
+#### From the above price graph of the `EMERALDS` product, we confirmed that `EMERALDS` does seem to be quite stable over time. Interestingly, the bid prices are generally lower than the ask prices.
+
+![tomatoes_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/tomatoes_historical_prices.png)
+
+#### From the above price graph of the `TOMATOES` product, we confirmed that `TOMATOES` does seem to be less stable than `EMERALDS` over time. Interestingly, the bid prices are also generally lower than the ask prices, and the fluctuations of the above `TOMATOES` price graph might resemble a random walk.
+
+#### We began with the [IMC_prototype.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/IMC_prototype.py) provided to us by Mark Brezina in the IMC Prosperity Discrod server. After learning the logic of the code, we experimented with different thresholds to buy and sell the tradable products. Realizing that our code needed to be adaptable, we attempted to store and track the sell orders that we encountered in a `sell_order_history` dictionary. We also created a `buy_order_history` dictionary to use alongside `sell_order_history` when calculating buy and sell thresholds for `SQUID_INK`, as suggested by Tyler Thomas. For `sell_order_history`, we would append the lowest sell order of the iteration, while we would append the highest buy order of the iteration to `buy_order_history`. These dictionaries could then be converted into strings to be put in `traderData` and converted back to dictionaries at the start of future iterations.
+
+```python
+# In round_1.py
+
+# At the start of the Trader class
+sell_order_history = {}
+buy_order_history = {}
+
+if state.traderData != "":
+    order_histories = string_to_list_of_dictionaries(state.traderData)
+    sell_order_history = order_histories[0]
+    buy_order_history = order_histories[1]
+
+# ...perform calculations
+
+# At the end of the Trader class
+newData = []
+newData.append(sell_order_history)
+newData.append(buy_order_history)
+
+traderData = str(newData)
+```
+
+#### In subsequent iterations, we took the average of the sell orders in `sell_order_history` for each product, and used this average as our threshold for buying and selling. For round 1, we actually ended up not using `buy_order_history` for calculating thresholds for `SQUID_INK`, I think because of time constraints.
+
+```python
+# In round_1.py
+
+if product == "KELP":
+    #acceptable_buy_price = get_average(sell_order_history[product])
+    acceptable_sell_price = get_average(sell_order_history[product]) + 3
+```
+
+#### We also attempted to add slight offsets for the buy/sell thresholds for some products, which we hoped would allow us to sell a product at a higher price than what we bought the product for. While most of these offsets were hardcoded based on rough estimates for how volatile each product would be, we added an adaptable offset for `SQUID_INK`, as we felt that such an offset would benefit `SQUID_INK` the most due to the product's high volatility. This adaptable offset was calculated by subtracting the 100th most recent sell order from the most recent sell order, dividing the difference by 6, and taking the absolute value. This result was then added to the threshold to sell, with the idea being that:
+1. Quickly rising sell orders should raise our threshold to sell, potentially allowing us to sell `SQUID_INK` at higher prices
+2. Stagnating sell orders should maintain our threshold to sell as it is
+3. Quickly falling sell orders should also raise our threshold to sell, as we would not want to sell `SQUID_INK` at these prices
+
+```python
+# In round_1.py
+
+# In hindsight, index_one and index_two probably should've been switched, but it still be fine given the absolute value 
+index_one = 0
+index_two = 99
+if len(sell_order_history[product]) < 100:
+    index_two = len(sell_order_history[product]) - 1
+
+sell_offset = (sell_order_history[product][index_one] - sell_order_history[product][index_two]) / 6
+if sell_offset < 0:
+    sell_offset *= -1
+
+# ...later in the code...
+if product == "SQUID_INK":
+    # ...
+    acceptable_sell_price = sell_order_ave + sell_offset
+```
+
+#### For the first iteration of the `Trader` class, we hardcoded many of the thresholds for all three products. We originally wanted these hardcoded values to only be used in the first iteration, however we found that they provided us with more profit when used in future iterations as well. As a result, assuming that the historical data given would reflect on the final submission data (which we later learned is not the case), we ended up sticking with these hardcoded values for many of our thresholds.
+
+```python
+# In round_1.py
+
+# "RAINFOREST_RESIN" price, hardcoded for now
+acceptable_buy_price = 9999  # Participant should calculate this value
+acceptable_sell_price = 10001  # Participant should calculate this value
+
+if product == "SQUID_INK":
+    acceptable_buy_price = 1950
+    acceptable_sell_price = 1970
+
+elif product == "KELP":
+    acceptable_buy_price = 2030
+    acceptable_sell_price = 2032
+
+# ...later in the code; we commented out the lines for calculating thresholds
+#if product == "RAINFOREST_RESIN":
+#acceptable_buy_price = get_average(sell_order_history[product]) - 2
+#acceptable_sell_price = get_average(sell_order_history[product]) + 1
+```
+
+#### These are the results of our Round 1 algorithm:
+
+![round_1_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_1.gif)
+![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.gif)
+
+#### While we did gain profit from our algorithm, we recognized that some of our buy and sell thresholds were still hardcoded for some of the products. As a result, we attempted to make our thresholds and algorithms more adaptable in future rounds.
+</details>
+
 ---
 <details>
 <summary><h2>Round 1 🦑</h2></summary>
