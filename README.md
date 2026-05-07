@@ -20,101 +20,265 @@
 
 #### Using the provided Data Capsule that allowed us to view historical prices of both `EMERALDS` and `TOMATOES`, we constructed the following price graphs of the two products:
 
-![emeralds_historical_prices_day_minus_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/emeralds_historical_prices_day_minus_2.png)
+![emeralds_historical_prices_day_minus_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/emeralds_historical_prices_day_minus_2.png)
 
 #### From the above price graph of the `EMERALDS` product, we confirmed that `EMERALDS` does seem to be quite stable over time. Interestingly, the bid prices are generally lower than the ask prices.
 
-![tomatoes_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/tomatoes_historical_prices.png)
+![tomatoes_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/tomatoes_historical_prices.png)
 
 #### From the above price graph of the `TOMATOES` product, we confirmed that `TOMATOES` does seem to be less stable than `EMERALDS` over time. Interestingly, the bid prices are also generally lower than the ask prices, and the fluctuations of the above `TOMATOES` price graph might resemble a random walk.
 
-#### We began with the [IMC_prototype.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/IMC_prototype.py) provided to us by Mark Brezina in the IMC Prosperity Discrod server. After learning the logic of the code, we experimented with different thresholds to buy and sell the tradable products. Realizing that our code needed to be adaptable, we attempted to store and track the sell orders that we encountered in a `sell_order_history` dictionary. We also created a `buy_order_history` dictionary to use alongside `sell_order_history` when calculating buy and sell thresholds for `SQUID_INK`, as suggested by Tyler Thomas. For `sell_order_history`, we would append the lowest sell order of the iteration, while we would append the highest buy order of the iteration to `buy_order_history`. These dictionaries could then be converted into strings to be put in `traderData` and converted back to dictionaries at the start of future iterations.
+#### We began with the [round_5.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/Preperations/Round%205/round_5.py), which was our submitted code for the last round (Round 5) of last year's Prosperity 3 competition. We figured that this file would have a lot of existing infrastructure and logic that we could potentially use to save implementation time in this year's competition. After relearning the algorithm, we decided to simplify the algorithm by removing/storing existing functions and logic, and adding more infrastructure to potentially give the algorithm more abstraction and modularity.
+
+#### We decided to store functionality that we thought might be useful later in the competition, but did not plan to use at the moment, in a `Functions_Storage` class. That way, the unused functions could be hidden through a dropdown menu in our IDEs without needing to delete them entirely:
 
 ```python
-# In round_1.py
+# In tutorial_round.py
 
-# At the start of the Trader class
-sell_order_history = {}
-buy_order_history = {}
+class Functions_Storage:
+    # A function we are not currently using but might consider in the future
+    def voucher_makes_sense(voucher_amount, most_recent_volcanic_rock_sell_order):
+        upper_bound = most_recent_volcanic_rock_sell_order * 1.02
+        lower_bound = most_recent_volcanic_rock_sell_order * 0.98
 
-if state.traderData != "":
-    order_histories = string_to_list_of_dictionaries(state.traderData)
-    sell_order_history = order_histories[0]
-    buy_order_history = order_histories[1]
-
-# ...perform calculations
-
-# At the end of the Trader class
-newData = []
-newData.append(sell_order_history)
-newData.append(buy_order_history)
-
-traderData = str(newData)
+        if voucher_amount < upper_bound and voucher_amount > lower_bound:
+            print(f"Voucher amount {voucher_amount} DOES (YES) makes sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+            return True
+        
+        print(f"Voucher amount {voucher_amount} DOES NOT (NO) make sense for most recent volcanic rock sell price {most_recent_volcanic_rock_sell_order}")
+        return False
+    
+    # ...more functions we are not currently using but might consider in the future
 ```
 
-#### In subsequent iterations, we took the average of the sell orders in `sell_order_history` for each product, and used this average as our threshold for buying and selling. For round 1, we actually ended up not using `buy_order_history` for calculating thresholds for `SQUID_INK`, I think because of time constraints.
+#### In addition, we tried building off of the existing `Product` class infrastructure to make a structure where the `Product` class will be the parent class that houses attributes shared across multiple products, and individual children classes that inherit the `Product` class and can have extra attributes and functions that are more specific to a particular product:
 
 ```python
-# In round_1.py
+# In tutorial_round.py
 
-if product == "KELP":
-    #acceptable_buy_price = get_average(sell_order_history[product])
-    acceptable_sell_price = get_average(sell_order_history[product]) + 3
+# Parent class
+class Product:
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
+        self.product_name = product_name
+        self.sell_order_history = sell_order_history
+        self.buy_order_history = buy_order_history
+
+        # ...other attributes that are shared across multiple products
+
+# Child class of the Product class (in this case, the Emerald class as an example)
+class Emerald(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
+        super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
+        
+        # These calculations for the acceptable buy and sell prices are specific to the Emerald product
+        self.acceptable_buy_price = ceil(self.buy_order_average) + 1
+        self.acceptable_sell_price = floor(self.sell_order_average) - 1
 ```
 
-#### We also attempted to add slight offsets for the buy/sell thresholds for some products, which we hoped would allow us to sell a product at a higher price than what we bought the product for. While most of these offsets were hardcoded based on rough estimates for how volatile each product would be, we added an adaptable offset for `SQUID_INK`, as we felt that such an offset would benefit `SQUID_INK` the most due to the product's high volatility. This adaptable offset was calculated by subtracting the 100th most recent sell order from the most recent sell order, dividing the difference by 6, and taking the absolute value. This result was then added to the threshold to sell, with the idea being that:
-1. Quickly rising sell orders should raise our threshold to sell, potentially allowing us to sell `SQUID_INK` at higher prices
-2. Stagnating sell orders should maintain our threshold to sell as it is
-3. Quickly falling sell orders should also raise our threshold to sell, as we would not want to sell `SQUID_INK` at these prices
+#### We wanted to simplify the `Trader` class implementation, mainly the `run()` method in the `Trader` class, so we also made a seperate `Strategy` class that the `run()` method can call to create and return back our orders we make for a given product:
 
 ```python
-# In round_1.py
+# In tutorial_round.py
 
-# In hindsight, index_one and index_two probably should've been switched, but it still be fine given the absolute value 
-index_one = 0
-index_two = 99
-if len(sell_order_history[product]) < 100:
-    index_two = len(sell_order_history[product]) - 1
+# Strategy class
+class Strategy:
+    def __init__(self, sell_order_history, buy_order_history, current_positions, position_limits, previous_EMAs):
+        self.product_info = {}
 
-sell_offset = (sell_order_history[product][index_one] - sell_order_history[product][index_two]) / 6
-if sell_offset < 0:
-    sell_offset *= -1
+        # Initialize the product information (in this example, the EMERALDS product)
+        self.product_info["EMERALDS"] = Emerald("EMERALDS",
+                                                sell_order_history["EMERALDS"],
+                                                buy_order_history["EMERALDS"],
+                                                current_positions["EMERALDS"],
+                                                position_limits["EMERALDS"])
+    
+    # This function can be called elsewhere
+    def trade_emeralds(self, order_depth):
+        # Trading logic
 
-# ...later in the code...
-if product == "SQUID_INK":
-    # ...
-    acceptable_sell_price = sell_order_ave + sell_offset
+        # Orders to return back
+        orders: List[Order] = []
+
+        # More trading logic
+        
+        return orders
+
+# ...later in the Trader class's run() method:
+class Trader:
+    def run(self, state: TradingState):
+        # Trading logic
+
+        """ Go through each product, for each product """
+        for product in state.order_depths:
+            
+            # More trading logic
+
+            if product == "EMERALDS":
+                # Call the trade_emeralds() function we have in the Strategy class (in this example)
+                result[product] = strategy.trade_emeralds(order_depth)
 ```
 
-#### For the first iteration of the `Trader` class, we hardcoded many of the thresholds for all three products. We originally wanted these hardcoded values to only be used in the first iteration, however we found that they provided us with more profit when used in future iterations as well. As a result, assuming that the historical data given would reflect on the final submission data (which we later learned is not the case), we ended up sticking with these hardcoded values for many of our thresholds.
+#### We also used the `traderData` variable to store product information (buy order histories, sell order histories, etc.) across different trading iterations; we also did this last year! The main change for this year's competition is that we used `jsonpickle` to more easily encode and decode information into and out of the `traderData` variable, as opposed to making customized parsing functions for the `traderData` string that might need to be updated each time we add additional types of information to `traderData`. With this functionality, we could construct a `New_Data` class that initializes and updates the current product information, which can then be encoded into `traderData`:
 
-```python
-# In round_1.py
+``` python
+# In tutorial_round.py
 
-# "RAINFOREST_RESIN" price, hardcoded for now
-acceptable_buy_price = 9999  # Participant should calculate this value
-acceptable_sell_price = 10001  # Participant should calculate this value
+# New_Data class to house our product information
+class New_Data:
+    def __init__(self, product_names, macaron_info):
+        self.MAX_HISTORY_LENGTH = 150
 
-if product == "SQUID_INK":
-    acceptable_buy_price = 1950
-    acceptable_sell_price = 1970
+        # Product information
+        self.sell_order_history = self.make_empty_container(products=product_names)
 
-elif product == "KELP":
-    acceptable_buy_price = 2030
-    acceptable_sell_price = 2032
+        # More product information
+    
+    def make_empty_container(self, products, make_position_dictionary: bool=False):
+        # Method implementation
 
-# ...later in the code; we commented out the lines for calculating thresholds
-#if product == "RAINFOREST_RESIN":
-#acceptable_buy_price = get_average(sell_order_history[product]) - 2
-#acceptable_sell_price = get_average(sell_order_history[product]) + 1
+# ...later in the Trader class's run() method:
+class Trader:
+    def run(self, state: TradingState):
+        # Make a New_Data object to update (by default)
+        new_data = New_Data(PRODUCT_NAMES, MACARON_INFO)
+
+        # Update new_data with previous trading data if it exists
+        if state.traderData != "":
+            new_data = decode(state.traderData)
+
+        # Trading logic (could include calls to update the current information in new_data)
+
+        # Make the new data to append for the next iteration
+        traderData = encode(new_data)
 ```
 
-#### These are the results of our Round 1 algorithm:
+#### Our trading strategy for the `EMERALDS` product mainly involves market-making. Because the product's price is said, and was confirmed to be, relatively stable (between around 9990 and 10010), and the ask prices are generally higher than the bid prices, there seemed to be a spread that we could work with to gain profit. By buying at a price slightly higher than the average bid price, our price could be seen as more favorable relative to other bid prices, which would make us more likely to continuously be able to successfully buy `EMERALDS`. By selling at a price slightly lower than the average ask price, our price could be seen as more favorable relative to other ask prices, which would make us more likely to continuously be able to successfully sell the `EMERALDS` we previously bought. As a result of the product's spread and the ask prices generally being higher than the bid prices, this means that even though we are buying at a slightly higher price and selling at a slightly lower price, we would still be making a profit each time we buy and subsequently sell `EMERALDS`. As a result, for `EMERALDS`, we mainly calculated our acceptable buy and sell prices through the current buy and sell order averages (to potentially reduce hardcoding), and continuously buy and sell `EMERALDS` at our acceptable buy and sell prices respectively:
 
-![round_1_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_1.gif)
-![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.gif)
+``` python
+# In tutorial_round.py
 
-#### While we did gain profit from our algorithm, we recognized that some of our buy and sell thresholds were still hardcoded for some of the products. As a result, we attempted to make our thresholds and algorithms more adaptable in future rounds.
+class Emerald(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
+        super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
+        
+        # This is less "hardcoded", we hope?
+        self.acceptable_buy_price = ceil(self.buy_order_average) + 1
+        self.acceptable_sell_price = floor(self.sell_order_average) - 1
+
+# In the Strategy class's trade_emeralds() method
+class Strategy:
+    # Strategy implementation
+
+    # Method to trade the EMERALDS product
+    def trade_emeralds(self, order_depth):
+        # Try to buy each sell order with our acceptable buy price
+        for best_ask, best_ask_amount in list(order_depth.sell_orders.items()):
+            orders.append(Order(product_name, acceptable_buy_price, -best_ask_amount))
+
+        # Try to sell to each buy order with our acceptable sell price
+        for best_bid, best_bid_amount in list(order_depth.buy_orders.items()):
+            orders.append(Order(product_name, acceptable_sell_price, -best_bid_amount))
+```
+
+##### Our trading strategy for the `TOMATOES` product also involves market-making, as I think the historical price graph of `TOMATOES` does also show the ask prices generally being greater than the bid prices. The difference with the `TOMATOES` product, however, is that the price of `TOMATOES` tends to fluctuate a lot, with the IMC Prosperity Discord describing it as a random walk. In order to calculate a threshold that continuously keeps up with the price fluctuations, we used exponential moving average (EMA) as our main value. The formula for exponential moving average (EMA) we used is the following:
+
+$\text{EMA} = α * \text{Current Mid Price} + (1 - α) * \text{Previous EMA}$
+
+#### We set alpha (α) (seemingly a value between 0 and 1 that determines how strongly more recent prices will affect the EMA) to be 0.3 to make our EMA moderately affected by more recent prices, given the random walk nature of `TOMATOES`. We calculated the current mid price during each iteration by taking the average of the highest bid price and the lowest ask price. Finally, on the first iteration, if the previous EMA has not yet been defined, we would set the previous EMA to the current mid price. After calculating the EMA, the previous EMA would be updated to the current EMA for the next iteration of the algorithm:
+
+``` python
+# In tutorial_round.py
+
+class Tomatoes(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit, previous_EMA):
+        super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
+
+        self.alpha = 0.3
+
+        self.previous_EMA = previous_EMA
+        self.EMA = self.previous_EMA
+
+# In the Strategy class's trade_tomatoes() method
+class Strategy:
+    # Strategy implementation
+
+    # Method to trade the TOMATOES product
+    def trade_tomatoes(self, order_depth):
+        def calculate_EMA(tomatoes, best_bid, best_ask):
+            # EMA calculation logic
+
+            tomatoes.EMA = (tomatoes.alpha * current_mid_price) + ((1 - tomatoes.alpha) * tomatoes.previous_EMA)
+
+            # EMA calculation logic
+
+            return tomatoes.EMA
+        
+        # Start of the tomatoes trading strategy
+        
+        # ...
+        
+        # Calculate the EMA
+        calculate_EMA(tomatoes, best_bid, best_ask)
+```
+
+#### We then used the spread between the highest bid price and the lowest ask price alongside the current EMA to help stabilize our acceptable buy and sell thresholds and better calculate our favorable buy and sell prices:
+
+``` python
+# In tutorial_round.py
+
+class Strategy:
+    # Strategy implementation
+
+    # Method to trade the TOMATOES product
+    def trade_tomatoes(self, order_depth):
+        # ...
+
+        best_ask, best_ask_amount = get_lowest_sell_order(list(order_depth.sell_orders.items()))
+        best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
+        spread = best_ask - best_bid
+
+        # Calculate the EMA
+        calculate_EMA(tomatoes, best_bid, best_ask)
+
+        acceptable_buy_price = ceil(tomatoes.EMA - (spread / 2) + 1)
+        acceptable_sell_price = floor(tomatoes.EMA + (spread / 2) - 1)
+```
+
+#### With our acceptable buy and sell prices calculated, we bought and sold `TOMATOES` similarly to how we bought and sold `EMERALDS` by trying to buy each existing sell order at our acceptable buy price, and sell to each existing buy order at our acceptable sell price:
+
+``` python
+# In tutorial_round.py
+
+class Strategy:
+    # Strategy implementation
+
+    # Method to trade the TOMATOES product
+    def trade_tomatoes(self, order_depth):
+        # ...
+
+        # Orders to return back
+        orders: List[Order] = []
+
+        # Try to buy each sell order with our acceptable buy price
+        for ask, ask_amount in list(order_depth.sell_orders.items()):
+            orders.append(Order(product_name, acceptable_buy_price, -ask_amount))
+
+        # Try to sell to each buy order with our acceptable sell price
+        for bid, bid_amount in list(order_depth.buy_orders.items()):
+            orders.append(Order(product_name, acceptable_sell_price, -bid_amount))
+        
+        return orders
+```
+
+#### This is the result of our Tutorial Round algorithm only trading `EMERALDS`:
+
+![tutorial_round_emeralds_results](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/tutorial_round_emeralds_results.png)
+
+#### This is the result of our Tutorial Round algorithm only trading `TOMATOES`:
+
+![tutorial_round_tomatoes_results](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/tutorial_round_tomatoes_results.png)
+
+#### Overall, it seems that our trading strategies for `EMERALDS` and `TOMATOES` are relatively successful, at least in the sense that they are both generating steady profit! Together, if I'm remembering correctly, the entire algorithm trading both `EMERALDS` and `TOMATOES` resulted in a final total profit of around 2.6 thousand XIRENs, which we were satisfied with. We are sure there is definitely some room for improvement, however, which we are curious to identify and learn.
 </details>
 
 ---
