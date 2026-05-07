@@ -180,7 +180,7 @@ class Strategy:
             orders.append(Order(product_name, acceptable_sell_price, -best_bid_amount))
 ```
 
-##### Our trading strategy for the `TOMATOES` product also involves market-making, as I think the historical price graph of `TOMATOES` does also show the ask prices generally being greater than the bid prices. The difference with the `TOMATOES` product, however, is that the price of `TOMATOES` tends to fluctuate a lot, with the IMC Prosperity Discord describing it as a random walk. In order to calculate a threshold that continuously keeps up with the price fluctuations, we used exponential moving average (EMA) as our main value. The formula for exponential moving average (EMA) we used is the following:
+#### Our trading strategy for the `TOMATOES` product also involves market-making, as I think the historical price graph of `TOMATOES` does also show the ask prices generally being greater than the bid prices. The difference with the `TOMATOES` product, however, is that the price of `TOMATOES` tends to fluctuate a lot, with the IMC Prosperity Discord describing it as a random walk. In order to calculate a threshold that continuously keeps up with the price fluctuations, we used exponential moving average (EMA) as our main value. The formula for exponential moving average (EMA) we used is the following:
 
 $\text{EMA} = α * \text{Current Mid Price} + (1 - α) * \text{Previous EMA}$
 
@@ -278,7 +278,7 @@ class Strategy:
 
 ![tutorial_round_tomatoes_results](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/tutorial_round_tomatoes_results.png)
 
-#### Overall, it seems that our trading strategies for `EMERALDS` and `TOMATOES` are relatively successful, at least in the sense that they are both generating steady profit! Together, if I'm remembering correctly, the entire algorithm trading both `EMERALDS` and `TOMATOES` resulted in a final total profit of around 2.6 thousand XIRENs, which we were satisfied with. We are sure there is definitely some room for improvement, however, which we are curious to identify and learn.
+#### Overall, it seems that our trading strategies for `EMERALDS` and `TOMATOES` are relatively successful, at least in the sense that they are both generating steady profit! Together, if I'm remembering correctly, the entire algorithm trading both `EMERALDS` and `TOMATOES` resulted in a final total profit of around 2.1 thousand XIRENs, which we were satisfied with. We are sure there is definitely some room for improvement, however, which we are curious to identify and learn.
 </details>
 
 ---
