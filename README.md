@@ -357,7 +357,7 @@ class Trader:
 #### These are the results of our Round 1 algorithm:
 
 ![round_1_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_algorithm_results_1.png)
-![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.gif)
+![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.png)
 
 #### As expected, our algorithm resulted in zero profit, which we were fine with, as we decided to be safer this round until we can be more confident in our algorithm.
 
