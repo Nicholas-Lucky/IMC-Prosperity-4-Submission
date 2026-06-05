@@ -373,21 +373,84 @@ class Trader:
 ![round_1_manual_trading_dyland_flax_order_book](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_dyland_flax_order_book.png)
 ![round_1_manual_trading_ember_mushroom_order_book](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_ember_mushroom_order_book.png)
 
-#### Our goal is to place a bid price and bid quantity for the `DRYLAND_FLAX` and `EMBER_MUSHROOM` that nets us as much profit as we can gain at the end of the separate call auctions.
+#### Our goal is to place a bid price and bid quantity for the `DRYLAND_FLAX` and `EMBER_MUSHROOM` that nets us as much profit as we can gain at the end of the separate call auctions. It is also worth noting that the maximum bid quantity we can place for a product is `50,000`.
 
-#### Our work for this round's manual trading can be viewed in [round_1_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_1/round_1_manual_trading.py). Assuming that the 5th trade will always be to SeaShells, we would essentially have 4 trades, each of which has 4 possible currencies to choose from. As a result, we assumed there would be a maximum of 4<sup>4</sup> = 256 possible "paths" for this challenge. Hence, we felt that it was possible to use brute force to determine the optimal series of trades that would yield the highest number of SeaShells. After fixing errors identified by Tyler Thomas, our round_1_manual_trading.py yielded the following path:
+#### Tyler Thomas identified that a bid price level of `30` and a quantity of `9999` would be optimal for the `DRYLAND_FLAX`, and a bid price level of `17` and a quantity of `19999` would be optimal for the `EMBER_MUSHROOM`. To double-check his initial answer, we coded a [round_1_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_1/round_1_manual_trading.py) field that uses brute force to simulate placing different potential quantities at a certain price level, and comparing the resulting profits to find the optimal quantity to place for a given price level. Tyler Thomas was completely sure that the bid price level of `30` and `17` are optimal for the `DRYLAND_FLAX` and `EMBER_MUSHROOM` respectively (we mainly wanted to double-check the associated bid quantities), so we were able to restrict the brute force algorithm to only simulating trading with these bid prices, which simplified the time complexity of our algorithm:
 
-![round_1_manual_code_output](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_code_output.jpg)
+```python
+# In round_1_manual_trading.py
 
-#### ^^ With a revenue of 544,340.16 SeaShells, and an initial amount of 500,000 SeaShells, our profit from this series of trades would be 544,340.16 - 500,000 = 44,340.16 SeaShells
+def main():
+    # Setup information...
+
+    """ Assume we know the prices we want to buy at """
+    dryland_flax_buy_price = 30
+    ember_mushroom_buy_price = 17
+```
+
+#### We also added the bid and ask order books of both the `DRYLAND_FLAX` and `EMBER_MUSHROOM` as dictionaries which we can use to "insert" our bid quantity to:
+```python
+# In round_1_manual_trading.py
+
+dryland_flax_bid_order_book = {
+    30: 30000,
+    29: 5000,
+    28: 12000,
+    27: 28000
+}
+
+dryland_flax_ask_order_book = {
+    28: 40000,
+    31: 20000,
+    32: 20000,
+    33: 33000
+}
+
+ember_mushroom_bid_order_book = {
+    20: 43000,
+    19: 17000,
+    18: 6000,
+    17: 5000,
+    16: 10000,
+    15: 5000,
+    14: 10000,
+    13: 7000
+}
+
+ember_mushroom_ask_order_book = {
+    12: 20000,
+    13: 25000,
+    14: 35000,
+    15: 6000,
+    16: 5000,
+    17: 0,
+    18: 10000,
+    19: 12000
+}
+```
+
+#### Using this, the general process of our `round_1_manual_trading.py` code is generally the following for each of the two products:
+1. With our specified bid price, loop through different bid quantities to place into the associated product order book at that bid price
+2. Calculate the clearance price of this modified order book
+3. Calculate the subsequent quantity of our bid that will be filled (we mainly did this for the `EMBER_MUSHROOM` product)
+4. Calculate the resulting profit, which we generally had as `profit = ((buy_back_price - clearance_price) * volume) - (buy_back_fee * filled_volume)`
+5. Of the profits we get from the different bid quantities we tested, find the highest profit, and return the associated bid quantity
+
+
+#### After fixing errors identified by Tyler Thomas, our `round_1_manual_trading.py` yielded the following:
+
+![round_1_manual_trading_code_output](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_code_output.png)
+
+#### ^^ This output confirmed Tyler Thomas's initial answer, so we decided to use these bid prices and quantities as our answer. Intuitively, we also thought that the bid quantities being `9999` and `19999` made sense, in that increasing the quantities to `10000` and `20000` might have resulted in the clearance price becoming one price level higher, which would cause us to lose more profit in total than we would gain from the extra quantity.
 
 #### These are the results of our Round 1 manual trading challenge:
 
-![round_1_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_results_1.gif)
-![round_1_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_results_2.jpg)
-![round_1_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_results_3.jpg)
+![round_1_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_results_1.png)
+![round_1_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_results_2.png)
+![round_1_manual_trading_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_results_3.png)
+![round_1_manual_trading_results_4](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_results_4.png)
 
-#### ^^ It seems that the number 1 team in Manual after Round 1, RBQ, also had a profit of 44,340 SeaShells, which supports the claim that we seemed to have submitted the optimal series of trades for Round 1's manual trading challenge.
+#### ^^ It seems that our total profit from our manual trading is ranked 1st, meaning we were able to provide the optimal bid prices and quantities for the Round 1's manual trading challenge.
 </details>
 
 ---
