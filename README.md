@@ -451,6 +451,13 @@ ember_mushroom_ask_order_book = {
 ![round_1_manual_trading_results_4](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_manual_trading_results_4.png)
 
 #### ^^ It seems that our total profit from our manual trading is ranked 1st, meaning we were able to provide the optimal bid prices and quantities for the Round 1's manual trading challenge.
+
+### Overall Round Result
+
+![round_1_overall_result](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_overall_result.png)
+
+#### ^^ In total, we made around 87,995 XIRENs in Round 1, all of which came from our manual trading performance. This total puts us at around 44% of our goal to reach 200,000 XIRENs by the end of Round 2.
+
 </details>
 
 ---
