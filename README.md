@@ -362,26 +362,18 @@ class Trader:
 #### As expected, our algorithm resulted in zero profit, which we were fine with, as we decided to be safer this round until we can be more confident in our algorithm.
 
 ### Manual Trading
-#### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/Round-1-19ee8453a09381d18b78cf3c21e5d916), the manual trading challenge for Round 1 was a series of currency trades that we needed to. We began with 500,000 SeaShells, with SeaShells as our starting currency, and we needed to trade this initial amount to different currencies before ending with a trade back to SeaShells. We amount we get from trading to another currency is determined by the multiplier of the trade, as determined by:
+#### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/round-1-trading-groundwork), the manual trading challenge for Round 1 involved two call auctions. each of which is for two separate products: `DRYLAND_FLAX` and `EMBER_MUSHROOM`. In each of the call auctions, our goal is to submit a bid price and associated quantity, and enter the auction. After entering the auction with our bid price, the auction is assumed to "end", and a clearing price will then be calculated to maximize the total volume that is traded. Any bids that are greater than or equal to the clearance price, and any asks that are less than or equal to the clearance price, can potentially be traded with. However, an important note is that the allocation for these trades are price priority, and then time priority (for trades in the same price level). In the case of our bids, this means that bids at a higher price level than our bid will be allocated first. In the same bid price level, we are assumed to be the last bids time-wise, meaning the rest of the bids from other parties at our bid price level will be allocated before our bid and quantity is allocated.
 
-| Products/Currencies | Snowballs | Pizzas | Silicon Nuggets | SeaShells |
-|:-------------------:|:---------:|:------:|:---------------:|:---------:|
-| Snowballs           | 1         | 1.45   | 0.52            | 0.72      |
-| Pizzas              | 0.7       | 1      | 0.31            | 0.48      |
-| Silicon Nuggets     | 1.95      | 3.1    | 1               | 1.49      |
-| SeaShells           | 1.34      | 1.98   | 0.64            | 1         |
+#### After the auction ends and the trades have been allocated, if our bid price and quantity allows us to have some/all of our quantity allocated, we will essentially have bought some of the associated product. At the end, we will sell this product back to the Merchant Guild at a flat rate. The rates for the two products are:
+1. `DRYLAND_FLAX`: 30 XIRENs per unit (no fees)
+2. `EMBER_MUSHROOM`: 20 XIRENs per unit (fee: 0.10 per unit traded)
 
-#### ^^ For example, if we have 500,000 SeaShells and trade to Pizzas, we will receive 500,000 x 1.98 = 990,000 Pizzas
+#### The main IMC game website also provided us with the following order books for the `DRYLAND_FLAX` and `EMBER_MUSHROOM` call auctions:
 
-#### Our goal is to perform 5 trades (with the 5th trade being back to SeaShells) that will ideally net us a profit in SeaShells — the general format is shown below. It is worth noting that we are allowed to trade a currency into the same currency (the resulting multiplier would be 1), and we are allowed to trade into a specific currency more than once.
+![round_1_manual_trading_dyland_flax_order_book](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_trading_dyland_flax_order_book.png)
+![round_1_manual_trading_ember_mushroom_order_book](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_manual_trading_ember_mushroom_order_book.png)
 
-| Initial Currency | Currency to Trade to |
-|:----------------:|:--------------------:|
-| SeaShells        | product_1            |
-| product_1        | product_2            |
-| product_2        | product_3            |
-| product_3        | product_4            |
-| product_4        | SeaShells            |
+#### Our goal is to place a bid price and bid quantity for the `DRYLAND_FLAX` and `EMBER_MUSHROOM` that nets us as much profit as we can gain at the end of the separate call auctions.
 
 #### Our work for this round's manual trading can be viewed in [round_1_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_1/round_1_manual_trading.py). Assuming that the 5th trade will always be to SeaShells, we would essentially have 4 trades, each of which has 4 possible currencies to choose from. As a result, we assumed there would be a maximum of 4<sup>4</sup> = 256 possible "paths" for this challenge. Hence, we felt that it was possible to use brute force to determine the optimal series of trades that would yield the highest number of SeaShells. After fixing errors identified by Tyler Thomas, our round_1_manual_trading.py yielded the following path:
 
