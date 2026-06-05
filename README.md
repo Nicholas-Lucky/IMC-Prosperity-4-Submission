@@ -283,98 +283,83 @@ class Strategy:
 
 ---
 <details>
-<summary><h2>Round 1 🦑</h2></summary>
+<summary><h2>Round 1 🌶️</h2></summary>
 
 ### Algorithmic Trading
-#### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/Round-1-19ee8453a09381d18b78cf3c21e5d916), Round 1 introduced us to our first three tradable products: `RAINFOREST_RESIN`, `KELP`, and `SQUID_INK`. These products seem to have varying levels of stability, with `RAINFOREST_RESIN` having relatively stable values, `KELP` having some variation, and `SQUID_INK` having the most volatility of the three products. `RAINFOREST_RESIN` has a position limit of `50`, `KELP` has a position limit of `50`, and `SQUID_INK` has a position limit of `50`.
+#### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/round-1-trading-groundwork), Round 1 introduced us to our first two official tradable products: `ASH_COATED_OSMIUM` and `INTARIAN_PEPPER_ROOT`. The price of `INTARIAN_PEPPER_ROOT` seems to be increasing steadilya nd linearly, while the price of `ASH_COATED_OSMIUM` seems to fluctuate in value and is more volatile. `ASH_COATED_OSMIUM` has a position limit of `80`, and `INTARIAN_PEPPER_ROOT` has a position limit of `80`.
 
-#### We began with the [IMC_prototype.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/IMC_prototype.py) provided to us by Mark Brezina in the IMC Prosperity Discrod server. After learning the logic of the code, we experimented with different thresholds to buy and sell the tradable products. Realizing that our code needed to be adaptable, we attempted to store and track the sell orders that we encountered in a `sell_order_history` dictionary. We also created a `buy_order_history` dictionary to use alongside `sell_order_history` when calculating buy and sell thresholds for `SQUID_INK`, as suggested by Tyler Thomas. For `sell_order_history`, we would append the lowest sell order of the iteration, while we would append the highest buy order of the iteration to `buy_order_history`. These dictionaries could then be converted into strings to be put in `traderData` and converted back to dictionaries at the start of future iterations.
+#### Using the provided Data Capsule that allowed us to view historical prices of both `ASH_COATED_OSMIUM` and `INTARIAN_PEPPER_ROOT`, we constructed the following price graphs of the two products:
+
+![ash_coated_osmium_historical_prices_day_minus_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/ash_coated_osmium_historical_prices_day_minus_2.png)
+
+#### From the above price graph of the `ASH_COATED_OSMIUM` product, we confirmed that `ASH_COATED_OSMIUM` seems quite volatile, and might potentially involve either a random walk or mean-reversion? 
+
+![intarian_pepper_root_historical_prices_day_minus_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/intarian_pepper_root_historical_prices_day_minus_2.png)
+
+#### From the above price graph of the `INTARIAN_PEPPER_ROOT` product, we confirmed that `INTARIAN_PEPPER_ROOT` does seem to be more stable than `ASH_COATED_OSMIUM`, and generally increases in price at a linear rate.
+
+#### We began with the [tutorial_round.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/tutorial_round/tutorial_round.py) we used in the Tutorial Round, and added an `Intarian_Pepper_Root` and `Ash_Coated_Osmium` class to use in our algorithm:
 
 ```python
 # In round_1.py
 
-# At the start of the Trader class
-sell_order_history = {}
-buy_order_history = {}
+class Intarian_Pepper_Root(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit):
+        super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
 
-if state.traderData != "":
-    order_histories = string_to_list_of_dictionaries(state.traderData)
-    sell_order_history = order_histories[0]
-    buy_order_history = order_histories[1]
+        # Specific attributes go here...
 
-# ...perform calculations
+class Ash_Coated_Osmium(Product):
+    def __init__(self, product_name, sell_order_history, buy_order_history, current_position, position_limit, previous_EMA):
+        super().__init__(product_name, sell_order_history, buy_order_history, current_position, position_limit)
 
-# At the end of the Trader class
-newData = []
-newData.append(sell_order_history)
-newData.append(buy_order_history)
+        # Specific attributes go here...
 
-traderData = str(newData)
+# Strategy class used to trade our products
+class Strategy:
+    def __init__(self, sell_order_history, buy_order_history, current_positions, position_limits, previous_EMAs):
+        self.product_info = {}
+
+        self.product_info["INTARIAN_PEPPER_ROOT"] = Intarian_Pepper_Root("INTARIAN_PEPPER_ROOT",
+                                                                         sell_order_history["INTARIAN_PEPPER_ROOT"],
+                                                                         buy_order_history["INTARIAN_PEPPER_ROOT"],
+                                                                         current_positions["INTARIAN_PEPPER_ROOT"],
+                                                                         position_limits["INTARIAN_PEPPER_ROOT"])
+
+        self.product_info["ASH_COATED_OSMIUM"] = Ash_Coated_Osmium("ASH_COATED_OSMIUM",
+                                                                   sell_order_history["ASH_COATED_OSMIUM"],
+                                                                   buy_order_history["ASH_COATED_OSMIUM"],
+                                                                   current_positions["ASH_COATED_OSMIUM"],
+                                                                   position_limits["ASH_COATED_OSMIUM"],
+                                                                   previous_EMAs["ASH_COATED_OSMIUM"])
+    
+    def trade_intarian_pepper_root(self, order_depth):
+        # Trading logic goes here...
+
+    def trade_ash_coated_osmium(self, order_depth):
+        # Trading logic goes here...
 ```
 
-#### In subsequent iterations, we took the average of the sell orders in `sell_order_history` for each product, and used this average as our threshold for buying and selling. For round 1, we actually ended up not using `buy_order_history` for calculating thresholds for `SQUID_INK`, I think because of time constraints.
+#### Generally in this round, due to time contraints and limited time availability, we chose to focus on trading the `INTARIAN_PEPPER_ROOT`, as we felt that the price behavior of this product was simpler to work with. Given that the price of the `INTARIAN_PEPPER_ROOT` was continuously rising in the historical price, we could theoretically buy as much `INTARIAN_PEPPER_ROOT` as we can at the beginning, and hold it until the end of the trading window. However, such a strategy depends on the `INTARIAN_PEPPER_ROOT`'s price always increasing. If the price of `INTARIAN_PEPPER_ROOT` "crashes" at the end of the trading window, our holding of `INTARIAN_PEPPER_ROOT` might end up resulting in us losing a lot of our profit, or all of our profit in general. As a result, we wanted to create a safer algorithm that still buys and holds `INTARIAN_PEPPER_ROOT`, however also sells some `INTARIAN_PEPPER_ROOT` in case of a price drop in order to confirm at least some profit. Unfortunately, we were not able to fully create an algorithm that noticeably performed this "safety sell" in our test submissions, and we hence decided to submit a zero-profit algorithm to at least eliminate the possibility of a crash leaving us with negative profit. The zero-profit algorithm essentially skips all trading algorithms for all products, meaning the no trades should ever occur in the algorithm:
 
 ```python
-# In round_1.py
+# In sleepy_trader.py
 
-if product == "KELP":
-    #acceptable_buy_price = get_average(sell_order_history[product])
-    acceptable_sell_price = get_average(sell_order_history[product]) + 3
-```
+class Trader:
+    def run(self, state: TradingState):
+        # Previous data setup lines...
 
-#### We also attempted to add slight offsets for the buy/sell thresholds for some products, which we hoped would allow us to sell a product at a higher price than what we bought the product for. While most of these offsets were hardcoded based on rough estimates for how volatile each product would be, we added an adaptable offset for `SQUID_INK`, as we felt that such an offset would benefit `SQUID_INK` the most due to the product's high volatility. This adaptable offset was calculated by subtracting the 100th most recent sell order from the most recent sell order, dividing the difference by 6, and taking the absolute value. This result was then added to the threshold to sell, with the idea being that:
-1. Quickly rising sell orders should raise our threshold to sell, potentially allowing us to sell `SQUID_INK` at higher prices
-2. Stagnating sell orders should maintain our threshold to sell as it is
-3. Quickly falling sell orders should also raise our threshold to sell, as we would not want to sell `SQUID_INK` at these prices
-
-```python
-# In round_1.py
-
-# In hindsight, index_one and index_two probably should've been switched, but it still be fine given the absolute value 
-index_one = 0
-index_two = 99
-if len(sell_order_history[product]) < 100:
-    index_two = len(sell_order_history[product]) - 1
-
-sell_offset = (sell_order_history[product][index_one] - sell_order_history[product][index_two]) / 6
-if sell_offset < 0:
-    sell_offset *= -1
-
-# ...later in the code...
-if product == "SQUID_INK":
-    # ...
-    acceptable_sell_price = sell_order_ave + sell_offset
-```
-
-#### For the first iteration of the `Trader` class, we hardcoded many of the thresholds for all three products. We originally wanted these hardcoded values to only be used in the first iteration, however we found that they provided us with more profit when used in future iterations as well. As a result, assuming that the historical data given would reflect on the final submission data (which we later learned is not the case), we ended up sticking with these hardcoded values for many of our thresholds.
-
-```python
-# In round_1.py
-
-# "RAINFOREST_RESIN" price, hardcoded for now
-acceptable_buy_price = 9999  # Participant should calculate this value
-acceptable_sell_price = 10001  # Participant should calculate this value
-
-if product == "SQUID_INK":
-    acceptable_buy_price = 1950
-    acceptable_sell_price = 1970
-
-elif product == "KELP":
-    acceptable_buy_price = 2030
-    acceptable_sell_price = 2032
-
-# ...later in the code; we commented out the lines for calculating thresholds
-#if product == "RAINFOREST_RESIN":
-#acceptable_buy_price = get_average(sell_order_history[product]) - 2
-#acceptable_sell_price = get_average(sell_order_history[product]) + 1
+        for product in state.order_depths:
+            # Don't trade any products ever to guarantee zero profit
+            break
 ```
 
 #### These are the results of our Round 1 algorithm:
 
-![round_1_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_1.gif)
-![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.gif)
+![round_1_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_algorithm_results_1.png)
+![round_1_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_1_algorithm_results_2.gif)
 
-#### While we did gain profit from our algorithm, we recognized that some of our buy and sell thresholds were still hardcoded for some of the products. As a result, we attempted to make our thresholds and algorithms more adaptable in future rounds.
+#### As expected, our algorithm resulted in zero profit, which we were fine with, as we decided to be safer this round until we can be more confident in our algorithm.
 
 ### Manual Trading
 #### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/Round-1-19ee8453a09381d18b78cf3c21e5d916), the manual trading challenge for Round 1 was a series of currency trades that we needed to. We began with 500,000 SeaShells, with SeaShells as our starting currency, and we needed to trade this initial amount to different currencies before ending with a trade back to SeaShells. We amount we get from trading to another currency is determined by the multiplier of the trade, as determined by:
