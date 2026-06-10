@@ -462,12 +462,10 @@ ember_mushroom_ask_order_book = {
 
 ---
 <details>
-<summary><h2>Round 2 🥐</h2></summary>
+<summary><h2>Round 2 🔬</h2></summary>
 
 ### Algorithmic Trading
-#### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-19ee8453a09381a580cdf9c0468e9bc8), Round 2 introduced us to 5 new tradeable products: `CROISSANTS`, `JAMS`, `DJEMBES`, `PICNIC_BASKET1`, and `PICNIC_BASKET2`. `PICNIC_BASKET1` and `PICNIC_BASKET2` are a little different in that they contain multiple products: `PICNIC_BASKET1` contains 6 `CROISSANTS`, 3 `JAMS`, and 1 `DJEMBES`, while `PICNIC_BASKET2` contains 4 `CROISSANTS` and 2 `JAMS`.
-
-#### `CROISSANTS` has a position limit of `250`, `JAMS` has a position limit of `350`, `DJEMBES` has a position limit of `60`, `PICNIC_BASKET1` has a position limit of `60`, and `PICNIC_BASKET2` has a position limit of `100`.
+#### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-Growing-Your-Outpost-345e8453a09380b29132fdf4de9174d4), no new tradeable products are added to be traded for the algorithm. Instead, Round 2 provides us with the opportunity to gain access to 25% more trade offers, provided that we place a bid in a `bid()` function that is in the top 50% of other bidders. If our bid is in the top 50% of other bidders, it seems we will then need to pay whatever we bid as a fee to access the full market.
 
 #### We used a similar strategy for the `CROISSANTS`, `JAMS`, and `DJEMBES`, using the average of the `sell_order_history` for our buy and sell offsets alongside some offsets to ideally allow buying at lower prices and selling at higher prices. For the thresholds to sell, we used the same adaptable offset calculations that were used for `SQUID_INK`.
 
@@ -1115,6 +1113,9 @@ def small_dip_checker(sell_order_history, buy_order_history, recents_length, cur
         <td>456</td>
     </tr>
     <tr align="center">
+        <th colspan="5">Rankings Resetted At This Point</th>
+    </tr>
+    <tr align="center">
         <td>Round 3</td>
         <td>2052</td>
         <td>498</td>
@@ -1136,5 +1137,3 @@ def small_dip_checker(sell_order_history, buy_order_history, recents_length, cur
         <td>229</td>
     </tr>
 </table>
-
-#### * This ranking was not recorded by us, and is hence estimated
