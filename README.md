@@ -1102,38 +1102,38 @@ def small_dip_checker(sell_order_history, buy_order_history, recents_length, cur
     </tr>
     <tr align="center">
         <td>Round 1</td>
-        <td>1022</td>
-        <td>715</td>
-        <td>1121</td>
-        <td>293</td>
+        <td>3932</td>
+        <td>1</td>
+        <td>5323</td>
+        <td>1027</td>
     </tr>
     <tr align="center">
         <td>Round 2</td>
-        <td>2971</td>
-        <td>1508</td>
-        <td>2764</td>
-        <td>815</td>
+        <td>1849</td>
+        <td>1</td>
+        <td>4221</td>
+        <td>456</td>
     </tr>
     <tr align="center">
         <td>Round 3</td>
-        <td>4036</td>
-        <td>1298</td>
-        <td>2907</td>
-        <td>1013</td>
+        <td>2052</td>
+        <td>498</td>
+        <td>1958</td>
+        <td>528</td>
     </tr>
     <tr align="center">
         <td>Round 4</td>
-        <td>3537</td>
-        <td>213</td>
-        <td> 2900*</td>
-        <td> 956*</td>
+        <td>1170</td>
+        <td>282</td>
+        <td>2204</td>
+        <td>303</td>
     </tr>
     <tr align="center">
         <td>Round 5</td>
-        <td>1330</td>
-        <td>92</td>
-        <td>2875</td>
-        <td>369</td>
+        <td>855</td>
+        <td>244</td>
+        <td>1763</td>
+        <td>229</td>
     </tr>
 </table>
 
