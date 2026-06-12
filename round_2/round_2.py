@@ -128,7 +128,7 @@ class Strategy:
                     orders.append(Order(product_name, ask, amount_to_buy))
                     remaining_buy_capacity -= amount_to_buy
         
-        # Sell if there is a small dip (highest_buy_order > fair_value - 1) in case of crashes
+        # Sell if there is a small dip (lowest_sell_order > fair_value - 1) in case of crashes
         if remaining_buy_capacity > 0:
             sell_threshold = int(fair_value) - 1
 

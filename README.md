@@ -467,115 +467,160 @@ ember_mushroom_ask_order_book = {
 ### Algorithmic Trading
 #### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-Growing-Your-Outpost-345e8453a09380b29132fdf4de9174d4), no new tradeable products are added to be traded for the algorithm. Instead, Round 2 provides us with the opportunity to gain access to 25% more trade offers, provided that we place a bid in a `bid()` function that is in the top 50% of other bidders. If our bid is in the top 50% of other bidders, it seems we will then need to pay whatever we bid as a fee to access the full market.
 
-#### We used a similar strategy for the `CROISSANTS`, `JAMS`, and `DJEMBES`, using the average of the `sell_order_history` for our buy and sell offsets alongside some offsets to ideally allow buying at lower prices and selling at higher prices. For the thresholds to sell, we used the same adaptable offset calculations that were used for `SQUID_INK`.
+#### We ended up not focusing too much on the bid for the extra trade offers, and instead just returned `2000` in our `bid()` function:
 
 ```python
 # In round_2.py
 
-if product == "CROISSANTS":
-    acceptable_buy_price = get_average(sell_order_history[product]) - 4
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
-
-if product == "DJEMBES":
-    acceptable_buy_price = get_average(sell_order_history[product]) - 4
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
-
-if product == "JAMS":
-    acceptable_buy_price = get_average(sell_order_history[product]) - 4
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
-```
-
-#### We also used a similar strategy for `PICNIC_BASKET1` and `PICNIC_BASKET2`, however, instead of using the `sell_order_history` of `PICNIC_BASKET1` and `PICNIC_BASKET2`, we broke the baskets down into the individual products they contained. The thresholds for `PICNIC_BASKET1` would be calculated by summing the `sell_order_history` average of `CROISSANTS` multiplied by 6, the `sell_order_history` average of `JAMS` multiplied by 3, and the `sell_order_history` average of `DJEMBES`. The thresholds for `PICNIC_BASKET2` would be calculated by summing the `sell_order_history` average of `CROISSANTS` multiplied by 4 and the `sell_order_history` average of `JAMS` multiplied by 2.
-
-```python
-# In round_2.py
-
-if product == "PICNIC_BASKET1":
-    croissants = (get_average(sell_order_history["CROISSANTS"])) * 6
-    jams = (get_average(sell_order_history["JAMS"])) * 3
-    djembe = get_average(sell_order_history["DJEMBES"])
-
-    acceptable_buy_price = croissants + jams + djembe - 5
-    acceptable_sell_price = acceptable_buy_price + sell_offset
-
-if product == "PICNIC_BASKET2":
-    croissants = (get_average(sell_order_history["CROISSANTS"])) * 4
-    jams = (get_average(sell_order_history["JAMS"])) * 2
-
-    acceptable_buy_price = croissants + jams - 5
-    acceptable_sell_price = acceptable_buy_price + sell_offset
-```
-
-#### We also attempted to add "crash detectors" that can be used to warn the algorithm of an incoming crash. We discussed two possible "crash detectors" to implement:
-1. If incoming prices for a product are significantly higher than the historical average, be ready to sell everything we have for that product
-2. If incoming prices for a product are significantly lower than prices some number of iterations ago (for example, 5 iterations ago), be ready to sell everything we have for that product
-
-#### We decided that our "crash detectors" should follow the first implementation (point 1), as, while recognizing the possibility of missing the potential upsides of continuously rising trends, it would be ideal for our algorithm to be proactive rather than reactive. As a result, we added four conditions to compare incoming prices and, in the event of one of these conditions being true, signal the algorithm to sell all it currently has for a given product.
-
-```python
-# In round_2.py
-
-# Condition 1: Sell order is slightly higher than a recent average (small-dip checker)
-# Condition 2: Sell order is too high above the historical average (big-dip checker)
-# Condition 3: Sell order of PICNIC_BASKET1 and PICNIC_BASKET2 is slightly higher than a recent average (small-dip checker)
-# Condition 4: Sell order of DJEMBES is slightly higher than a recent average (small-dip checker)
-# Condition 5 (not used): Sell order is too low vs 5 sell orders ago
-
-# ...later in the code...
-if ((condition_one or condition_two or condition_three or condition_four or condition_five) and (sell_order_history.get(product) is not None)):
-    # Sell everything for that product
-```
-
-#### We also attempted to work with the current positions and position limits of the products, however, due to time constraints, we were not able to implement relevant functionality that we found meaningful. We were able to begin implementation to track current positions for our products, and store these values in `traderData` for future iterations.
-
-```python
-# In round_2.py
-
-current_positions = {}
-
-if state.traderData != "":
-    order_histories = convert_trading_data(state.traderData)
+class Trader:
     # ...
-    current_positions = order_histories[2]
 
-# ...
-
-position = 0
-    if current_positions.get(product) is not None:
-        position = current_positions[product]
-    else:
-        current_positions[product] = 0
-
-# ...
-
-if int(best_bid) > acceptable_sell_price:
-    # Sell some of the product
-    # ...
-    position -= best_bid_amount
-
-# ...
-
-newData = []
-# ...
-newData.append(current_positions)
-
-# String value holding Trader state data required. 
-# It will be delivered as TradingState.traderData on next execution.
-traderData = str(newData)
+    def bid(self):
+        return 2000
 ```
 
-#### Regarding the previous products in Round 1, we attempted to make our algorithm more adaptable by uncommenting our `sell_order_history` averages, allowing the buy and sell thresholds of `RAINFOREST_RESIN`, `KELP`, and `SQUID_INK` to be mainly influenced by previous sell orders; we left hardcoded offsets for some of the thresholds, however. We hope that this change will allow our algorithm to perform in more scenarios than if we solely relied on hardcoded values, despite their performance in Round 1.
+#### <b>It is important to note that we received help for our changes in our `INTARIAN_PEPPER_ROOT` and `ASH_COATED_OSMIUM` algorithms.</b>
+
+#### For trading `INTARIAN_PEPPER_ROOT`, the algorithm begins by calculating the expected fair value of the `INTARIAN_PEPPER_ROOT` at this current moment in time. Since the price of `INTARIAN_PEPPER_ROOT` is historically a steady linear time, we can calculate the fair value through a linear equation: y = mx + b. In this case, y = the fair value, m = the slope/drift by which the `INTARIAN_PEPPER_ROOT` is increasing by after each timestamp difference, x = the current timestamp, and b = the initial price of `INTARIAN_PEPPER_ROOT` at the start of the algorithm.
 
 ```python
 # In round_2.py
 
-if product == "RAINFOREST_RESIN":
-    acceptable_buy_price = get_average(sell_order_history[product]) - 1   # Influenced by sell_order_history, -1 is still hardcoded
-    acceptable_sell_price = get_average(sell_order_history[product]) + 1  # Influenced by sell_order_history, -1 is still hardcoded
+# In the Strategy class
+    
+    # In the trade_intarian_pepper_root() function
 
-if product == "KELP":
-    acceptable_buy_price = get_average(sell_order_history[product])       # Influenced by sell_order_history
-    acceptable_sell_price = get_average(sell_order_history[product]) + 3  # Influenced by sell_order_history, -3 is still hardcoded
+        fair_value = intarian_pepper_root.intercept + intarian_pepper_root.drift * state.timestamp
+        remaining_buy_capacity = intarian_pepper_root.position_limit - intarian_pepper_root.current_position
+```
+
+#### We can now use this `fair_value` as a threshold to buy and sell our `INTARIAN_PEPPER_ROOT`. For one, we can buy `INTARIAN_PEPPER_ROOT` if a sell order has a price that is at most `7` more than the fair value. In such a case, we can buy some `INTARIAN_PEPPER_ROOT` as that sell order's price, and the amount we will buy is the minimum of the sell order's ask amount and our `remaining_buy_capacity`:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_intarian_pepper_root() function
+
+        # Buy everything as long as the price is <= fair_value + 7
+        for ask, ask_amount in sell_orders:
+            if remaining_buy_capacity <= 0:
+                break
+
+            if ask <= int(fair_value) + 7:
+                amount_to_buy = min(ask_amount, remaining_buy_capacity)
+
+                if amount_to_buy > 0:
+                    orders.append(Order(product_name, ask, amount_to_buy))
+                    remaining_buy_capacity -= amount_to_buy
+```
+
+#### We can also sell some `INTARIAN_PEPPER_ROOT` if we notice that the lowest sell order is greater than 1 + the fair value. As mentioned in the Round 1 algorithm, if the price of the `INTARIAN_PEPPER_ROOT` remained stable and continously rose, we could technically buy as much `INTARIAN_PEPPER_ROOT` as we can at the start of the trading window and hold it until the end without needing to sell it. However, as we were worried about potential crashes, we wanted a way to safely sell and buy back `INTARIAN_PEPPER_ROOT` to keep holding `INTARIAN_PEPPER_ROOT` while also securing profit in case of a crash:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_intarian_pepper_root() function
+
+        # Sell if there is a small dip (lowest_sell_order > fair_value - 1) in case of crashes
+        if remaining_buy_capacity > 0:
+            sell_threshold = int(fair_value) - 1
+
+            if sell_threshold < lowest_sell_order:
+                amount_to_sell = min(remaining_buy_capacity, 40)
+                orders.append(Order(product_name, sell_threshold, amount_to_sell))
+```
+
+#### The algorithm also has a second condition to sell, if a buy order's price is more than 8 + the fair value. In this case, the current price of the `INTARIAN_PEPPER_ROOT` would be higher than normal (our expected linear pattern and slope/drift of the `INTARIAN_PEPPER_ROOT` price), so we would have the opportunity to make slightly more profit than normal in this timestamp, and we can always buy back `INTARIAN_PEPPER_ROOT` in a later timestamp:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_intarian_pepper_root() function
+
+        # Also sell if the price is super high (>= fair_value + 8) and if we're at the position limit
+        # (we could sell anyway and get more profit than normal)
+        if current_position_duplicate >= intarian_pepper_root.position_limit:
+            remaining_sell_capacity = intarian_pepper_root.position_limit + current_position_duplicate
+
+            for bid, bid_amount in buy_orders:
+                if bid >= int(fair_value) + 8 and current_position_duplicate > 60 and remaining_sell_capacity > 0:
+                    amount_to_sell = min(bid_amount, current_position_duplicate - 60, remaining_sell_capacity)
+
+                    if amount_to_sell > 0:
+                        orders.append(Order(product_name, bid, -amount_to_sell))
+                        remaining_sell_capacity -= amount_to_sell
+                        current_position_duplicate -= amount_to_sell
+```
+
+#### For trading `ASH_COATED_OSMIUM`, since (as seen in the Round 1 algorithm) the historical price of the `ASH_COATED_OSMIUM` is a lot more volatile, the algorithm bases its thresholds based on mid prices. The mid price made sense, as the `ASH_COATED_OSMIUM` does have a slight spread between the buy and sell order prices. As a result, the algorithm starts by getting the past 20 mid prices, and uses the average of these 20 prices as the fair value. The algorithm also calculates the mispriced threshold, and the remaining buy and sell capacities to make sure we are not buying or selling more than our current position and the `ASH_COATED_OSMIUM` position limit allows us to:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_ash_coated_osmium() function
+
+        recent_mid_prices = ash_coated_osmium.mid_order_history[-20:]
+        fair_value = mean(recent_mid_prices)
+        mispriced_threshold = fair_value + 2.0 * order_book_imbalance
+
+        # ...
+        
+        remaining_buy_capacity = ash_coated_osmium.position_limit - current_position_duplicate
+        remaining_sell_capacity = ash_coated_osmium.position_limit + current_position_duplicate
+```
+
+#### The algorithm then tries to buy mispriced prices, which is checked by seeing if the `mispriced_threshold` is greater than or equal to 0.5 + the price of the current sell order:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_ash_coated_osmium() function
+
+        # Buy mispriced prices
+        for ask, ask_amount in sell_orders:
+            if remaining_buy_capacity <= 0:
+                break
+
+            if mispriced_threshold - ask >= 0.5:
+                amount_to_buy = min(ask_amount, remaining_buy_capacity, 30)
+
+                if amount_to_buy > 0:
+                    orders.append(Order(product_name, ask, amount_to_buy))
+                    remaining_buy_capacity -= amount_to_buy
+                    current_position_duplicate += amount_to_buy
+```
+
+#### The algorithm also uses a similar condition for selling mispriced prices, and checks if the `mispriced_threshold` is less than or equal to the price of the current buy order - 0.5:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_ash_coated_osmium() function
+
+        # Sell mispriced prices
+        for bid, bid_amount in buy_orders:
+            if remaining_sell_capacity <= 0:
+                break
+
+            if bid - mispriced_threshold >= 0.5:
+                amount_to_sell = min(bid_amount, remaining_sell_capacity, 30)
+
+                if amount_to_sell > 0:
+                    orders.append(Order(product_name, bid, -amount_to_sell))
+                    remaining_sell_capacity -= amount_to_sell
+                    current_position_duplicate -= amount_to_sell
 ```
 
 #### These are the results of our Round 2 algorithm:
