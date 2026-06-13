@@ -724,42 +724,21 @@ class Trader:
 #### ^^ It is very clear that the algorithm we submitted for this round worked really well.
 
 ### Manual Trading
-#### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-19ee8453a09381a580cdf9c0468e9bc8), the manual trading challenge for Round 2 presented 10 shipping containers, each of which contains a base amount of 10,000 SeaShells, a set multiplier, and some number of inhabitants — all of which will be used to calculate the final amount of SeaShells. The final amount of SeaShells awarded by a crate will also depend on the percentage of participants who choose the crate. The 10 shipping containers are presented below, with each table element (except the empty elements) representing a crate:
+#### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-Growing-Your-Outpost-345e8453a09380b29132fdf4de9174d4), the manual trading challenge for Round 2 gives us a budget of `50000` to invest in three areas: Research, Scale, and Speed. Each area has its own mechanic for gaining profit.
 
-| x80 Multiplier, 6 Inhabitants  | x37 Multiplier, 6 Inhabitants |                               |
-|:------------------------------:|:-----------------------------:|:-----------------------------:|
-| x10 Multiplier, 1 Inhabitant   | x31 Multiplier, 2 Inhabitants | x17 Multiplier, 1 Inhabitant  |
-| x90 Multiplier, 10 Inhabitants | x50 Multiplier, 4 Inhabitants |                               |
-| x20 Multiplier, 2 Inhabitants  | x73 Multiplier, 4 Inhabitants | x89 Multiplier, 8 Inhabitants |
+#### Research determines the strength of our trading edge. The profit formula for this area is a logarithmic function: `research(x) = 200_000 * np.log(1 + x) / np.log(1 + 100)`. It is worth noting that `np.log` is the `log` function from the Python NumPy package.
 
-#### The formula for the final amount of SeaShells awarded by the crate is as follows:
-#### $\text{Final Amount}=\frac{10,000 * \text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}$
+#### Scale determines our broadly we deploy our strategy. The profit from this area is more of a multiplier that is used to multiply the current Profit and Loss (PnL). The scale multiplier we can get ranges from `0` to `7`, and grows linearly based on our allocation percentage. While not stated in the wiki, we used the following formula to calculate the scale multiplier we would receive based on our allocation: `scale(x) = x * (7 / 100)`.
 
-#### ^^ As an example, if we pick the crate on the top left of the table (x80 Multiplier, 6 Inhabitants). If, at the end of the round, we find that 5% of the participants picked this crate, the amount of SeaShells awarded to us from this crate would be:
-#### $\text{Final Amount}=\frac{10,000 * 80}{6 + (0.05 * 100)}=\frac{800,000}{6 + 5}=\frac{800,000}{11}\approx72727.2727\text{ SeaShells}$
+#### Speed determines how often we win our trades. The profit from this area is also more of a multiplier that is multiplied onto the current PnL. Unlike the Research and Scale areas, however, the Speed area always results in the loss of PnL, as the range of the Speed multiplier is from `0.1` to `0.9`. In addition, the way the Speed multiplier is calculated depends on both our allocation and the allocations of other teams. The Speed multiplier is ranked based, meaning that the team with the highest speed allocation will get `0.9`, the team with the lowest speed allocation will get `0.1`, and the Speed multiplier will be spread linearly among the rest of the teams (if multiple teams have the same Speed allocation, the multiple teams will receive the same Speed multiplier).
 
-#### In this manual trading challenge, we may open up to 2 shipping containers, with the first container being free to pick, and the second container costing an initial fee of 50,000 SeaShells. Our goal is to award ourselves with the most number of SeaShells possible from these crates.
+#### Altogether, the total PnL we will get from our investment is `(Research * Scale * Speed) - Budget_Used`. Our goal is to determine what percentage of our `50000` budget to allocate to each area, and maximize our profit.
 
-#### Given that the first crate is free to pick, we focused on the possibility of picking a second crate, which is riskier due to its initial 50,000 SeaShell fee. In order for a second crate to be profitable, the final amount of SeaShells it awards to us would need to have at least 50,000 to offset the initial fee. In other words:
-#### $\frac{10,000 * \text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge50,000$
+#### Our work for the Round 2 Manual Trading round can be found in our [round_2_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_2/round_2_manual_trading.py). Going into this round, we thought that figuring out an optimal combination of Research and Scale was doable; we can use mathematical equations and derivatives to maximize the gains of Research and Scale, while accounting for the diminishing gains from the logarithmically growing Research, or code a brute force algorithm to confirm the optimal combination of allocations by testing all combinations possible. However, we realized that the main "mystery" in this round involves the Speed allocation, as this is the only area that depends on the choices of other teams.
 
-#### Rearranging the equation gives us:
-#### $10,000 * \frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge50,000$
-#### $\frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge\frac{50,000}{10,000}$
-#### $\frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge5$
+#### Tyler Thomas mentioned that, technically, a fully optimal Speed allocation would be 0 or 1, provided that every team in the competition chose the same Speed allocation. Given that we kind of assumed that this possibility would be very unlikely, our initial guess was a Speed allocation of 2, as it would be just above the perceived nash equilibrium of Speed = 0 or 1 (in reality, I don't know if, if every team picked the same Speed allocation, every team would have been awarded a Speed multiplier of `0.9` or `0.1`). As we continued to discuss how other teams would allocate their Speed, we developed some scenarios in [round_2_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_2/round_2_manual_trading.py) on how the Speed allocations would be distributed, and, using this distribution, used a brute force algorithm to find the optimal combination of Research, Scale, and Speed that would reward the highest PnL.
 
-#### We interpreted this to mean that the initial multiplier of the crate will be divided by the sum of the number of inhabitants and the participant pick percentage. This quotient will be the "final multiplier" that multiplies with the crate's base amount of 10,000 SeaShells to get the final amount of SeaShells awarded. As a result, we would want the "final multiplier" of the second crate to be greater than or equal to 5 to offset the initial fee of 50,000 SeaShells.
 
-#### With all variables given to us except for the participant pick percentage, we can calculate the maximum participant pick percentage allowed for a crate to have a "final multiplier" of 5. Using [round_2_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_2/round_2_manual_trading.py), we found the following maximums for the crates:
-
-![round_2_manual_code_output](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_manual_code_output.jpg)
-#### ^^ It is worth noting that adding these percentages up yields 58.4%, meaning that it is highly likely that most, if not all, of these crates will not be profitable as a second choice, depending on how the other 41.6% of crate picks are distributed.
-
-#### After some discussion, we eventually decided to pick 2 crates, well aware of the risks of a second crate:
-1. x80 Multiplier, 6 Inhabitants
-2. x31 Multiplier, 2 Inhabitants
-
-#### We chose the (x80 Multiplier, 6 Inhabitants) crate because we assume more participants would choose the (x90 Multiplier, 10 Inhabitants), (x89 Multiplier, 8 Inhabitants), and (x73 Multiplier, 4 Inhabitants) crates. Hence, we hoped that the maximum participant pick percentage of 10% was feasible. We chose the (x31 Multiplier, 2 Inhabitants) crate because we wanted to pick a crate that had a lower multiplier, and we guessed that the (x10 Multiplier, 1 Inhabitant), (x20 Multiplier, 2 Inhabitants), (x17 Multiplier, 1 Inhabitant), (x37 Multiplier, 3 Inhabitants), and (x50 Multiplier, 4 Inhabitants) crates would have their maximum participant pick percentages exceeded.
 
 #### These are the results of our Round 2 manual trading challenge:
 

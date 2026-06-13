@@ -114,6 +114,16 @@ def main():
     optimal_scale_value = -1
     optimal_speed_value = -1
 
+    """ Added for documentation purposes """
+    # speed_scenario = calculate_speed_linear
+    # speed_scenario = calculate_speed_exponential_less_steep
+    # speed_scenario = calculate_speed_exponential_more_steep
+    # speed_scenario = calculate_speed_quadratic
+    # speed_scenario = calculate_speed_tylers_version
+    speed_scenario = calculate_speed_tylers_version_2
+    speed_scenario_name = speed_scenario.__name__
+
+    # Run the brute force algorithm
     for research in range(0, 101):
         for scale in range(0, 101 - research):
             for speed in range(0, 101 - research - scale):
@@ -128,10 +138,14 @@ def main():
                 # speed_value = calculate_speed_exponential_more_steep(speed)
                 # speed_value = calculate_speed_quadratic(speed)
                 # speed_value = calculate_speed_tylers_version(speed)
-                speed_value = calculate_speed_tylers_version_2(speed)
+                # speed_value = calculate_speed_tylers_version_2(speed)
+
+                """ Modified for documentation purposes """
+                speed_value = speed_scenario(speed)
 
                 PnL = (research_value * scale_value * speed_value) - (BUDGET * (percentage_used / 100))
                 print(f"research: {research} scale: {scale} speed: {speed} percentage used: {percentage_used} PnL: {PnL}")
+                print()
 
                 if PnL > optimal_profit:
                     optimal_profit = PnL
@@ -144,9 +158,19 @@ def main():
                     optimal_scale_value = scale_value
                     optimal_speed_value = speed_value
     
+    # Print the results!
+    print("------------------------------------------------------------")
+    print("######################### RESULTS! #########################")
+    print("------------------------------------------------------------")
+
+    """ Added for documentation purposes """
+    print(f"Speed Scenario Used: {speed_scenario_name}\n")
+
     print(f"Optimal Profit: {optimal_profit}")
     print(f"\tOptimal Research %: {optimal_research_percentage}\n\t\tResult from this percentage = {optimal_research_value})")
     print(f"\tOptimal Scale %: {optimal_scale_percentage}\n\t\tResult from this percentage = {optimal_scale_value})")
     print(f"\tOptimal Speed %: {optimal_speed_percentage}\n\t\tResult from this percentage = {optimal_speed_value})")
+
+    print("------------------------------------------------------------")
 
 main()
