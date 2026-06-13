@@ -623,12 +623,105 @@ class Trader:
                     current_position_duplicate -= amount_to_sell
 ```
 
+#### We can also do some market making with `ASH_COATED_OSMIUM`, as there is a small spread between the buy and sell orders, with the sell orders generally being slightly higher than that of the buy orders. In this case, the algorithm assumes that the spread is a rigid `2`. The algorithm then calculates the position shift based on the algorithm's current position in `ASH_COATED_OSMIUM` and a rigid position skew. With this, we can then calculate the acceptable buy and sell prices based on the fair value, spread, and the position shift (as an offset). As this is a market making strategy, however, we also need to make sure that the acceptable buy price is lower than the rest of the sell order prices, and that the acceptable sell price is higher than the rest of the buy order prices.
+
+#### We can then use this `acceptable_buy_price` and `acceptable_sell_price` as thresholds for buying and selling `ASH_COATED_OSMIUM`. If the acceptable buy price is less than the fair value, we will buy `ASH_COATED_OSMIUM`, and if the acceptable sell price is greater than the fair value, we will sell `ASH_COATED_OSMIUM`.
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_ash_coated_osmium() function
+
+        """ Market making strategy """
+        spread = 2
+        position_skew = 0.10
+
+        # Calculate the acceptable buy and sell prices
+        position_shift = -current_position_duplicate * position_skew
+        acceptable_buy_price = int(fair_value + position_shift - spread)
+        acceptable_sell_price = int(fair_value + position_shift + spread) + 1
+
+        if acceptable_buy_price >= lowest_sell_order:
+            acceptable_buy_price = lowest_sell_order - 1
+        
+        if acceptable_sell_price <= highest_buy_order:
+            acceptable_sell_price = highest_buy_order + 1
+
+        # Calculate how much to buy or sell
+        buy_factor = max(0.0, remaining_buy_capacity / ash_coated_osmium.position_limit)
+        sell_factor = max(0.0, remaining_sell_capacity / ash_coated_osmium.position_limit)
+
+        buy_size = int(30 * buy_factor)
+        sell_size = int(30 * sell_factor)
+
+        # Conditions to buy or sell
+        if buy_size > 0 and remaining_buy_capacity > 0 and acceptable_buy_price < fair_value:
+            orders.append(Order(product_name, acceptable_buy_price, min(buy_size, remaining_buy_capacity)))
+        
+        if sell_size > 0 and remaining_sell_capacity > 0 and acceptable_sell_price > fair_value:
+            orders.append(Order(product_name, acceptable_sell_price, -min(sell_size, remaining_sell_capacity)))
+```
+
+#### The algorithm also has secondary buying and selling prices which is more selective than the `acceptable_buy_price` and `acceptable_sell_price`. The secondary buy price is 3 less than the `acceptable_buy_price`, and the secondary sell price is 3 more than the `acceptable_sell_price`. We then try to place a buy order at the secondary buying price if we still have some buying capacity and `buy_factor > 0`, and we try to place a sell order at the secondary selling price if we still have some selling capacity and `sell_factor > 0`:
+
+```python
+# In round_2.py
+
+# In the Strategy class
+    
+    # In the trade_ash_coated_osmium() function
+
+        # Secondary backup layer in case of liquidity
+        acceptable_buy_price_secondary = acceptable_buy_price - 3
+        acceptable_sell_price_secondary = acceptable_sell_price + 3
+
+        if remaining_buy_capacity > 0 and buy_factor > 0:
+            amount_to_buy = min(15, max(0, remaining_buy_capacity - buy_size))
+            if amount_to_buy > 0:
+                orders.append(Order(product_name, acceptable_buy_price_secondary, amount_to_buy))
+        
+        if remaining_sell_capacity > 0 and sell_factor > 0:
+            amount_to_sell = min(15, max(0, remaining_sell_capacity - sell_size))
+            if amount_to_sell > 0:
+                orders.append(Order(product_name, acceptable_sell_price_secondary, amount_to_sell))
+```
+
+#### In addition, in the `Trader` class itself, we also made a small change to initialize our `New_Data` object in a separate `__init__(self)` constructor function, as we learned that, in the submission, the `Trader` class itself might only be initialized once, rather that it's the `run()` function that is being called multiple times across the timestamps. As a result, we can set attributes and our `New_Data` object in the constructor without worrying that such data will not exist in subsequent timestamps. Which this might not affect our profits too much, this change may result in better code quality and a performance imrpvoement to an extent, as we wouldn't be constantly creating and deleting `New_Data` objects.
+
+```python
+# In round_2.py
+
+# In the Trader class
+
+    def __init__(self):
+        self.PRODUCT_NAMES = ["INTARIAN_PEPPER_ROOT",
+                              "ASH_COATED_OSMIUM"]
+
+        self.POSITION_LIMITS = {
+            "INTARIAN_PEPPER_ROOT": 80,
+            "ASH_COATED_OSMIUM": 80
+        }
+
+        self.MACARON_INFO = ["askPrice",
+                             "bidPrice",
+                             "exportTariff",
+                             "importTariff",
+                             "sugarPrice",
+                             "sunlightIndex",
+                             "transportFees"]
+
+        """ Make a New_Data object to update (by default) """
+        self.new_data = New_Data(self.PRODUCT_NAMES, self.MACARON_INFO)
+```
+
 #### These are the results of our Round 2 algorithm:
 
-![round_2_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_algorithm_results_1.gif)
-![round_2_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_algorithm_results_2.gif)
+![round_2_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_algorithm_results_1.png)
+![round_2_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_algorithm_results_2.png)
 
-#### ^^ Currently, we suspect a possible reason for this downward trend in profit could be due to faulty "crash detector" logic or implementation or both.
+#### ^^ It is very clear that the algorithm we submitted for this round worked really well.
 
 ### Manual Trading
 #### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-19ee8453a09381a580cdf9c0468e9bc8), the manual trading challenge for Round 2 presented 10 shipping containers, each of which contains a base amount of 10,000 SeaShells, a set multiplier, and some number of inhabitants — all of which will be used to calculate the final amount of SeaShells. The final amount of SeaShells awarded by a crate will also depend on the percentage of participants who choose the crate. The 10 shipping containers are presented below, with each table element (except the empty elements) representing a crate:
