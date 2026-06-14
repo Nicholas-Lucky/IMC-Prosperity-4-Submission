@@ -786,12 +786,12 @@ class Trader:
 
 #### These are the results of our Round 2 manual trading challenge:
 
-![round_2_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_results_1.png)
-![round_2_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_results_2.png)
+![round_2_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_results_1.png)
+![round_2_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_results_2.png)
 
 #### We were pleasantly surprised to find that our allocations were actually optimal! Our manual trading result of `217869` XIRENs is also nearly 80,000 XIRENs above the fifth scenario's estimated profit, which meant that it does seem that our Speed allocation of `42` was more than the majority of other Speed allocations, and ended up giving us a higher than expected Speed multiplier. The IMC game website also provided the following insights regarding the submitted Speed allocation distribution:
 
-![round_2_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_2.png)
+![round_2_manual_trading_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_results_3.png)
 
 #### ^^ It seems that we currently assumed that teams would generally pick lower Speed allocations, however it seems that we were also correct to consider that the main factor in the Speed multiplier is the Speed allocations that at least one team picked at all, rather than the number of teams that picked a certain Speed allocation.
 
