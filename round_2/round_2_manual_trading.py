@@ -160,8 +160,6 @@ def main():
     
     # Print the results!
     print("------------------------------------------------------------")
-    print("######################### RESULTS! #########################")
-    print("------------------------------------------------------------")
 
     """ Added for documentation purposes """
     print(f"Speed Scenario Used: {speed_scenario_name}\n")

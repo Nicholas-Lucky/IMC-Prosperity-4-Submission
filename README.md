@@ -738,18 +738,69 @@ class Trader:
 
 #### Tyler Thomas mentioned that, technically, a fully optimal Speed allocation would be 0 or 1, provided that every team in the competition chose the same Speed allocation. Given that we kind of assumed that this possibility would be very unlikely, our initial guess was a Speed allocation of 2, as it would be just above the perceived nash equilibrium of Speed = 0 or 1 (in reality, I don't know if, if every team picked the same Speed allocation, every team would have been awarded a Speed multiplier of `0.9` or `0.1`). As we continued to discuss how other teams would allocate their Speed, we developed some scenarios in [round_2_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_2/round_2_manual_trading.py) on how the Speed allocations would be distributed, and, using this distribution, used a brute force algorithm to find the optimal combination of Research, Scale, and Speed that would reward the highest PnL.
 
+#### The first scenario we tried for the Speed allocations is a linear distribution from `0.1` to `0.9`. This means that, in this scenario, the teams are evenly distributed across all possible Speed allocations. This scenario gave the following result:
 
+![round_2_manual_trading_code_output_linear_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_linear_speed.png)
+
+#### ^^ The optimal Speed allocation in this scenario, `35` is noticeably larger than our initial guess of `2`, which is understandable, as this assumes that every team would be evenly distributed on all potential Speed allocations (low, middle, and high), which could be unlikely.
+
+#### The second scenario we tried is a "less steep" exponential curve, which would mean that teams are generally picking higher Speed allocations than otherwise, meaning we would need a higher Speed allocation to secure a good Speed multiplier. This scenario gave the following result:
+
+![round_2_manual_trading_code_output_exponential_less_steep_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_exponential_less_steep_speed.png)
+
+#### ^^ The optimal Speed allocation in this scenario is `32`, which is surpsingly lower than the optimal Speed allocation from the linear Speed distribution. Right now, we think that this might either be because of the specific equation that we used for this secnario, or maybe because the exponential distribution means that the Speed multiplier will not change as much in lower Speed allocations (we might be wrong on this).
+
+#### The third scenario we tried is a "more steep" exponential curve, which would mean that even more teams in general would pick higher Speed allocations, which would hence incentivize an even higher Speed allocation to maintain a good Speed multiplier. This scenario gave the following result:
+
+![round_2_manual_trading_code_output_exponential_more_steep_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_exponential_more_steep_speed.png)
+
+#### ^^ As expected, this optimal Speed allocation of `39` is higher than the optimal Speed allocation of `32` from the "less steep" exponential curve.
+
+#### The fourth scenario we tried is a quaratic curve, which would mean that teams would generally pick lower Speed allocations, meaning that, as we increase our Speed allocation, we would immediately start surpassing the Speed allocations of many teams, however the number of teams we surpass as we increase our Speed allocation would diminish. We thought that this distribution might be a little more reasonable, given that we thought that it is likely that teams will generally pick lower Speed allocations. This scenario gave the following result:
+
+![round_2_manual_trading_code_output_quadratic_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_quadratic_speed.png)
+
+#### ^^ The optimal Speed allocation for this scenario is `33`, which is similar to the linear Speed distribution scenario. This was a little surprising, as I initially thought that the optimal Speed allocation for this scenario would have been lower than the linear Speed scenario, however I think that a possible reason might be that the main change in this scenario from the linear Speed scenario is more so the optimal Speed multiplier we can achieve (meaning that, using this quadratic curve, we could allocate the same amount of percentage for Speed, and achieve a higher Speed multiplier by default from the graph).
+
+#### The fifth scenario we tried involves manually creating a list of Speed allocations that will be picked. The idea of this scenario is that, at some point during our discussion, we also considered the possibility that another way to view the Speed allocations from the other team is simply what Speed allocations will at least one team pick. In other words, this view asks "what Speed allocation numbers will be picked?", instead of "how many teams will pick a particular Speed allocation number?". In this scenario, we assumed that the Speed allocations of 0-11, 19-21, 24-26, 29-41, 49-52, 55, 60-61, and 89-100 will be picked by at least one team. With this list, as we loop through potential Speed allocations in our brute force algorithm, we can insert our Speed allocation into this list, and calculate our Speed multiplier we would subsequently receive. This scenario gave the following result:
+
+![round_2_manual_trading_code_output_tylers_version_1_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_tylers_version_1_speed.png)
+
+#### ^^ The optimal Speed allocation for this scenario is `41`, which is currently our highest optimal Speed allocation scenario.
+
+#### The sixth scenario we tried is similar to the fifth scenario, in which we created a list of Speed allocations that will be picked. The difference in this scenario is we just assumed that all Speed allocations (0-100) will be picked. The idea of this is that, if only one team is required to pick a certain Speed allocation for that Speed allocation to be accounted for in the Speed multiplier calculations, with a large enough number of competing teams, it might make sense to think that it's possible for all Speed allocations to be picked at least once. This scecnario gave the following result:
+
+![round_2_manual_trading_code_output_tylers_version_2_speed](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_code_output_tylers_version_2_speed.png)
+
+#### ^^ The optimal Speed allocation for this scenario is `35`, which is interestingly the same as the linear Speed distribution scenario, which probably makes sense, as the premises of the two scenarios do seem similar.
+
+#### Overall, what we found notable in these results is that the optimal Speed allocation was around the 30-41 range, which is more than our initial guess of `2`. After some discussion, we eventually agreed that our hesitancy for picking Speed allocations as high as 30-42 was because we weren't sure if such a Speed allocation was optimal; if such a Speed allocation was too high, a lower Speed allocation would have allowed us to gain more profit from investing in more Research and Scale. On the other hand, a higher Speed allocation would be much safer, meaning we would not need to worry as much about picking a Speed allocation that is too low, as we both agreed that a Speed allocation of 30-41 is likely to be around or above the majority of allocation picks from other teams.
+
+#### After more discussion, we agreed that, given our time and current expertise, it is unlikely that doing more research would provide us with the optimal answer, at least one that we would be confident in. Despite this, our main priority during this time is to meet the 200,000 XIRENs threshold in order to advance past Round 2. After Round 1, we needed to make at least 112,005 XIRENs in Round 2 in order to meet this threshold.
+
+#### This consideration of meeting the 200,000 XIREN threshold was where the suggestion of picking a higher Speed allocation began to make more sense. Particularly, we felt quite comfortable with the optimal Speed allocation from the fifth scenario: `41`. In the fifth scenario, the optimal Speed allocation of `41`, along with the associated optimal Research and Scale allocations, gave an optimal profit of around `148912` XIRENs, which, if true, would be more than enough for us to meet the 200,000 XIREN requirement. In addition, we found comfort in our assumption that a Speed allocation of `41` would be quite high, high enough that it is potentially likely for it to surpass the allocations of the majority of other teams, and give us an even higher Speed multiplier, and hence PnL, than the code output. As a result, while we didn't think that a Speed allocation of `41` was optimal, we thought that the allocation was a comfortable choice that could safely guarantee enough profit to advance past Round 2.
+
+#### After we made our submission, Tyler Thomas decided to change our Speed allocation to `42`, after seeing some teams communicate their preference for the Speed allocation of `41` in the IMC Prosperity Discord server. As a result, our final submission for this manual trading round is the following:
+
+![round_2_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_trading_submission.png)
 
 #### These are the results of our Round 2 manual trading challenge:
 
-![round_2_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_manual_results_1.gif)
-![round_2_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_manual_results_2.jpg)
+![round_2_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_results_1.png)
+![round_2_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_manual_results_2.png)
 
-#### Both of our crates awarded us with around 33,000 to 34,000 SeaShells each. With an initial fee of 50,000 SeaShells for the second crate, it seems that we would have finished the manual trading challenge with more SeaShells if we had only chosen one crate. It is also worth nothing that the final distribution of crate picks was provided to us in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-19ee8453a0938112aa5fd7f0d060ffe6):
+#### We were pleasantly surprised to find that our allocations were actually optimal! Our manual trading result of `217869` XIRENs is also nearly 80,000 XIRENs above the fifth scenario's estimated profit, which meant that it does seem that our Speed allocation of `42` was more than the majority of other Speed allocations, and ended up giving us a higher than expected Speed multiplier. The IMC game website also provided the following insights regarding the submitted Speed allocation distribution:
 
-![round_2_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_2_manual_results_3.jpg)
+![round_2_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_2.png)
 
-#### ^^ Only the (x10 Multiplier, 1 Inhabitant) and (x20 Multiplier, 2 Inhabitants) crates ended up being profitable as second choices, which we did not expect, as we assumed that they would have had enough picks to have their maximum participant pick percentages exceeded; overall, these crates seemed to risky for us to choose at the time, so a more likely change we could have made to increase our profit is to only choose one crate and forgo the second crate and the 50,000 SeaShell fee.
+#### ^^ It seems that we currently assumed that teams would generally pick lower Speed allocations, however it seems that we were also correct to consider that the main factor in the Speed multiplier is the Speed allocations that at least one team picked at all, rather than the number of teams that picked a certain Speed allocation.
+
+### Overall Round Result
+
+![round_2_overall_result](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_2_overall_result.png)
+
+#### ^^ In total, we made around 301,972 XIRENs in Round 2, with a good amount of which coming from our manual trading performance. This thankfully allowed us to reach our goal of at least 200,000 XIRENs by the end of Round 2!
+
 </details>
 
 ---
