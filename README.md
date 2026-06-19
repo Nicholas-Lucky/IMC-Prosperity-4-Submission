@@ -816,8 +816,7 @@ class Trader:
 
 ![hydrogel_packs_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/hydrogel_packs_historical_prices_day_0.png)
 
-![velvetfruit_extract_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/
-velvetfruit_extract_historical_prices_day_0.png)
+![velvetfruit_extract_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/velvetfruit_extract_historical_prices_day_0.png)
 
 ![vev_4000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4000_historical_prices_day_0.png)
 
@@ -900,8 +899,8 @@ velvetfruit_extract_historical_prices_day_0.png)
 
 #### These are the results of our Round 3 algorithm:
 
-![round_3_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_1.gif)
-![round_3_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_2.gif)
+![round_3_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_1.png)
+![round_3_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_2.png)
 
 #### ^^ Given the complexity of the `HYDROGEL_PACK` product, we were definitely happy to have gained profit at all. However, it is curious to note that we had a PnL of around 22,000 at one point, however we ended up losing a lot of this PnL towards the end of the trading window. As a result, in the future, finding ways to confirm PnL and overall make a safer approach to our algorithm could benefit our profit even more. It is unclear if our downward trend check was fully useful in this case (it might have been, however we currently are unsure) 
 
