@@ -283,7 +283,7 @@ class Strategy:
 
 ---
 <details>
-<summary><h2>Round 1 🌶️</h2></summary>
+<summary><h2>Round 1 🍄</h2></summary>
 
 ### Algorithmic Trading
 #### As mentioned in [Round 1 of the wiki](https://imc-prosperity.notion.site/round-1-trading-groundwork), Round 1 introduced us to our first two official tradable products: `ASH_COATED_OSMIUM` and `INTARIAN_PEPPER_ROOT`. The price of `INTARIAN_PEPPER_ROOT` seems to be increasing steadilya nd linearly, while the price of `ASH_COATED_OSMIUM` seems to fluctuate in value and is more volatile. `ASH_COATED_OSMIUM` has a position limit of `80`, and `INTARIAN_PEPPER_ROOT` has a position limit of `80`.
@@ -462,7 +462,7 @@ ember_mushroom_ask_order_book = {
 
 ---
 <details>
-<summary><h2>Round 2 🔬</h2></summary>
+<summary><h2>Round 2 🌶️</h2></summary>
 
 ### Algorithmic Trading
 #### As mentioned in [Round 2 of the wiki](https://imc-prosperity.notion.site/Round-2-Growing-Your-Outpost-345e8453a09380b29132fdf4de9174d4), no new tradeable products are added to be traded for the algorithm. Instead, Round 2 provides us with the opportunity to gain access to 25% more trade offers, provided that we place a bid in a `bid()` function that is in the top 50% of other bidders. If our bid is in the top 50% of other bidders, it seems we will then need to pay whatever we bid as a fee to access the full market.
@@ -805,64 +805,105 @@ class Trader:
 
 ---
 <details>
-<summary><h2>Round 3 🌋</h2></summary>
+<summary><h2>Round 3 🥭</h2></summary>
 
 ### Algorithmic Trading
-#### As mentioned in [Round 3 of the wiki](https://imc-prosperity.notion.site/Round-3-19ee8453a093811082dbcdd1f6c1cd0f), Round 3 introduced us to the following six tradable products: `VOLCANIC_ROCK_VOUCHER_9500`, `VOLCANIC_ROCK_VOUCHER_9750`, `VOLCANIC_ROCK_VOUCHER_10000`, `VOLCANIC_ROCK_VOUCHER_10250`, `VOLCANIC_ROCK_VOUCHER_10500`, and `VOLCANIC_ROCK`. `VOLCANIC_ROCK_VOUCHER_9500`, `VOLCANIC_ROCK_VOUCHER_9750`, `VOLCANIC_ROCK_VOUCHER_10000`, `VOLCANIC_ROCK_VOUCHER_10250`, and `VOLCANIC_ROCK_VOUCHER_10500` are vouchers that grant us the ability to buy `VOLCANIC_ROCK` at a given price; this price is called the strike price, which we guessed meant that, for example, `VOLCANIC_ROCK_VOUCHER_9500` allows us to buy `VOLCANIC_ROCK` at 9,500 SeaShells. These vouchers also have expiration dates, however it seems that their expiration dates outlast all 5 rounds of the IMC Prosperity 3 competition, meaning that we do not need to worry about expiration dates for this year's competition; expiration dates may ceratinly be a factor in next year's competition, however.
+#### As mentioned in [Round 3 of the wiki](https://imc-prosperity.notion.site/Round-3-Gloves-Off-34ce8453a0938072a58cc7de372ff551), Round 3 removed all of the previous tradable products from rounds 1 and 2, and introduced us to 12 new tradeable products. The first two products are `HYDROGEL_PACK` and `VELVETFRUIT_EXTRACT`, both of which are said to be "delta 1" products that behave similarly to previous products in rounds 1 and 2. The other ten products, however, are option vouchers that are involved with the `VELVETFRUIT_EXTRACT` product: `VEV_4000`, `VEV_4500`, `VEV_5000`, `VEV_5100`, `VEV_5200`, `VEV_5300`, `VEV_5400`, `VEV_5500`, `VEV_6000`, and `VEV_6500`. Each voucher has a respective strike price that is indicated in their names and a 7-day expiration deadline starting from round 1 (each round represents 1 day).
 
-#### The position limit for `VOLCANIC_ROCK` is `400`, the position limit for `VOLCANIC_ROCK_VOUCHER_9500` is `200`, the position limit for `VOLCANIC_ROCK_VOUCHER_9750` is `200`, the position limit for `VOLCANIC_ROCK_VOUCHER_10000` is `200`, the position limit for `VOLCANIC_ROCK_VOUCHER_10250` is `200`, the position limit for `VOLCANIC_ROCK_VOUCHER_10500` is `200`.
+#### The position limit for `HYDROGEL_PACK` is `200`, the position limit for `VELVETFRUIT_EXTRACT` is `200`, and the position limit for each of the ten vouchers is `300` each.
 
-#### Tyler Thomas quickly pointed out that the vouchers to buy `VOLCANIC_ROCK` are similar to real-life options in trading. Due to inexperience and time constraints, we were not able to implement a meaningful strategy to trade the vouchers and `VOLCANIC_ROCK` as if they were options, at least to our knowledge. Instead, we traded the vouchers and `VOLCANIC_ROCK` as tradable products:
+#### Using the provided Data Capsule that allowed us to view historical prices of `HYDROGEL_PACK`, `VELVETFRUIT_EXTRACT`, and the ten vouchers. Using the historical prices, we constructed the following price graphs of the products:
 
-``` python
-# In round_3.py
+![hydrogel_packs_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/hydrogel_packs_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
+![velvetfruit_extract_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/
+velvetfruit_extract_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK_VOUCHER_9500":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
+![vev_4000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4000_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK_VOUCHER_9750":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
+![vev_4500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4500_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK_VOUCHER_10000":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
+![vev_5000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5000_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK_VOUCHER_10250":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
+![vev_5100_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5100_historical_prices_day_0.png)
 
-if product == "VOLCANIC_ROCK_VOUCHER_10500":
-    acceptable_buy_price = get_average(sell_order_history[product]) - sell_offset
-    acceptable_sell_price = get_average(sell_order_history[product]) + sell_offset
-```
+![vev_5200_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5200_historical_prices_day_0.png)
 
-#### We also attempted to tweak the "crash detectors" to be less sensitive, as we suspected that the "crash detectors" may have signaled our algorithm to sell everything for a given product too frequently, especially at lower prices. In addition, we changed the `sell_offset` calculations to only include the most recent sell order and the 10th (previously 100th) most recent sell order.
+![vev_5300_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5300_historical_prices_day_0.png)
+
+![vev_5400_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5400_historical_prices_day_0.png)
+
+![vev_5500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5500_historical_prices_day_0.png)
+
+![vev_6000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_6000_historical_prices_day_0.png)
+
+![vev_6500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_6500_historical_prices_day_0.png)
+
+#### Due to time constraints, we ended up trying to only trade the `HYDROGEL_PACK`. We began with the general strategy we used for the `ASH_COATED_OSMIUM` in Round 2, and tried different variations and thresholds of the strategy in our test submissions to see if a particular variation worked for the `HYDROGEL_PACK`. Our thought process for this is that the historical price graph for the `HYDROGEL_PACK` did seem similar to the `ASH_COATED_OSMIUM` in that they both do seem to be "delta-1" products.
+
+#### For `HYDROGEL_PACK`, the strategy we ended up submitting in our [round_3.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_3/round_3.py) involved EMA (which in hindsight doesn't seem to be the most robust, especially as it was used solely and without previous metrics like the historical mid prices). Essentially, we would calculate the current EMA for the `HYDROGEL_PACK` product, and use it in our market-making thresholds to buy and sell:
 
 ```python
 # In round_3.py
 
-index_one = 0
-index_two = 10
-if len(sell_order_history[product]) < (index_two + 1):
-    index_two = len(sell_order_history[product]) - 1
+# In the Strategy class
+    
+    # In the trade_hydrogel_pack() function
 
-sell_offset = (sell_order_history[product][index_one] - sell_order_history[product][index_two]) / 3
-if sell_offset < 0:
-    sell_offset *= -1
+        # ...
+        
+        current_position_duplicate = hydrogel_pack.current_position
+
+        # ...
+
+        ema = hydrogel_pack.calculate_EMA(highest_buy_order, lowest_sell_order)
+        spread = abs(lowest_sell_order - highest_buy_order)
+        position_skew = 0.15
+
+        position_shift = -current_position_duplicate * position_skew
+
+        acceptable_buy_price = int(ema + position_shift - (spread / 2))
+        acceptable_sell_price = int(ema + position_shift + (spread / 2)) + 1
+
+        # Emphasize the market-making strategy by making our buy and sell orders more favorable than the rest of the buy and sell orders
+        if acceptable_buy_price >= lowest_sell_order:
+            acceptable_buy_price = lowest_sell_order - 1
+        
+        if acceptable_sell_price <= highest_buy_order:
+            acceptable_sell_price = highest_buy_order + 1
+```
+
+#### We also added a small check to only do market-making with the `HYDROGEL_PACK` if the current price is not in a downward trend. Otherwise, we will sell a little bit of our `HYDROGEL_PACK` inventory to ideally add a bit more safety and confirmation in our algorithm in case of a crash or downward trend that does not resolve to what the prices previously were:
+
+```python
+# In round_3.py
+
+# In the Strategy class
+    
+    # In the trade_hydrogel_pack() function
+
+        # ...
+        
+        current_position_duplicate = hydrogel_pack.current_position
+
+        # ...
+
+        # If we're not in a downward trend
+        if hydrogel_pack.mid_order_history[-2] <= hydrogel_pack.mid_order_history[-1] and hydrogel_pack.mid_order_history[-3] <= hydrogel_pack.mid_order_history[-1]:
+            orders.append(Order(product_name, highest_buy_order + 1, min(buy_size, remaining_buy_capacity)))
+            orders.append(Order(product_name, lowest_sell_order - 1, -min(buy_size, remaining_buy_capacity)))
+        
+        else:
+            # Sell some to be safe so we're not holding things too much
+            orders.append(Order(product_name, lowest_sell_order - 3, -5))
 ```
 
 #### These are the results of our Round 3 algorithm:
 
-![round_3_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_algorithm_results_1.gif)
-![round_3_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_algorithm_results_2.gif)
+![round_3_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_1.gif)
+![round_3_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_algorithm_results_2.gif)
 
-#### ^^ We suspect that possible reasons for this downward trend could include faulty logic and implementation for trading vouchers and `VOLCANIC_ROCK`, and continued faulty implementation for our "crash detectors".
+#### ^^ Given the complexity of the `HYDROGEL_PACK` product, we were definitely happy to have gained profit at all. However, it is curious to note that we had a PnL of around 22,000 at one point, however we ended up losing a lot of this PnL towards the end of the trading window. As a result, in the future, finding ways to confirm PnL and overall make a safer approach to our algorithm could benefit our profit even more. It is unclear if our downward trend check was fully useful in this case (it might have been, however we currently are unsure) 
 
 ### Manual Trading
 #### As mentioned in [Round 3 of the wiki](https://imc-prosperity.notion.site/Round-3-19ee8453a093811082dbcdd1f6c1cd0f), the manual trading challenge for Round 3 presents us with an opportunity to trade Flippers with a group of Sea Turtles. Our goal is to offer 2 bids for Flippers that are at the best price for the Sea Turtles to accept; we think that it is not required to place 2 bids, however it is encouraged to place 2 bids. For these bids, each of the Sea Turtles will accept the lowest bid that is over their price, which can range from 160 to 200, and from 250 to 320. For our second bid, the Sea Turtles will trade if our bid is higher than the average of all second bids from all participants; if our bid is lower than the average of all second bids from all participants, then the probability of a Sea Turtle trading with us will be decreased. After these trades are made, we are able to sell our Flippers for 320 SeaShells each.
