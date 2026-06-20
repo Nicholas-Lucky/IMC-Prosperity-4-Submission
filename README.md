@@ -1056,13 +1056,13 @@ def second_bid_scenario_5():
 
 #### As a result, we decided to enter `902` as our second bid, and we were then able to reconfigure our brute force algorithm to find the optimal first bid to pair with a second bid of `902`. At some point, the night before the end of Round 3, we did end up deciding to lower our second bid to around `895`, however we both ended up forgetting to make the actual change on the IMC website, so our submission remained as follows:
 
-![round_3_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_manual_trading_submission.png)
+![round_3_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_submission.png)
 
 #### These are the results of our Round 3 manual trading challenge:
 
-![round_3_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_1.png)
-![round_3_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_2.png)
-![round_3_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_3.png)
+![round_3_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_results_1.png)
+![round_3_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_results_2.png)
+![round_3_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_results_3.png)
 
 #### ^^ Overall, we did pretty well in the Round 3 Manual Challenge. However, as the average second bid ended up actually being `859`, it was very clear that we had overestimated the increase in magnitude other teams would place in their second bids. In hindsight, our code scenarios did seem to have more "optimal" answers (although we're not sure if the second bids of `856` and `857` from Scenarios 1 and 5 would have been better, as they were under the actual second bid average), which we found very interesting. Perhaps some of the scenarios like Scenarios 2, 3, and 4 did end up taking into account concerns of higher second bids from other teams enough such that it was reliable enough to follow. Either way, we found our second bid of `902` to be reasonable in the moment, and we plan to reflect on how we can improve our predictions in future scenarios.
 
