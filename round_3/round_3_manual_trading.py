@@ -37,8 +37,8 @@ def calculate_optimal_bids(avg_b2):
         
         # If there are still counterparty orders that have not yet been traded with:
         if b1 <= MAXIMUM_BID - RESERVE_PRICE_INCREMENT:
-            # current_b2, current_b2_profit =  calculate_optimal_second_bid(avg_b2, starting_bid=b1)
-            current_b2, current_b2_profit =  calculate_set_second_bid(avg_b2, 912, starting_bid=b1)
+            current_b2, current_b2_profit =  calculate_optimal_second_bid(avg_b2, starting_bid=b1)
+            # current_b2, current_b2_profit =  calculate_set_second_bid(avg_b2, 912, starting_bid=b1)
 
         # Calculate the total profit and compare
         current_total_profit = current_b1_profit + current_b2_profit

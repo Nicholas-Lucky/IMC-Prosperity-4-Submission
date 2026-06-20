@@ -820,7 +820,6 @@ class Trader:
 #### Velvetfruit Extract:
 ![velvetfruit_extract_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/velvetfruit_extract_historical_prices_day_0.png)
 
-
 #### VEV_4000:
 ![vev_4000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4000_historical_prices_day_0.png)
 
@@ -918,17 +917,160 @@ class Trader:
 #### ^^ Given the complexity of the `HYDROGEL_PACK` product, we were definitely happy to have gained profit at all. However, it is curious to note that we had a PnL of around 22,000 at one point, however we ended up losing a lot of this PnL towards the end of the trading window. As a result, in the future, finding ways to confirm PnL and overall make a safer approach to our algorithm could benefit our profit even more. It is unclear if our downward trend check was fully useful in this case (it might have been, however we currently are unsure) 
 
 ### Manual Trading
-#### As mentioned in [Round 3 of the wiki](https://imc-prosperity.notion.site/Round-3-19ee8453a093811082dbcdd1f6c1cd0f), the manual trading challenge for Round 3 presents us with an opportunity to trade Flippers with a group of Sea Turtles. Our goal is to offer 2 bids for Flippers that are at the best price for the Sea Turtles to accept; we think that it is not required to place 2 bids, however it is encouraged to place 2 bids. For these bids, each of the Sea Turtles will accept the lowest bid that is over their price, which can range from 160 to 200, and from 250 to 320. For our second bid, the Sea Turtles will trade if our bid is higher than the average of all second bids from all participants; if our bid is lower than the average of all second bids from all participants, then the probability of a Sea Turtle trading with us will be decreased. After these trades are made, we are able to sell our Flippers for 320 SeaShells each.
+#### As mentioned in [Round 3 of the wiki](https://imc-prosperity.notion.site/Round-3-Gloves-Off-34ce8453a0938072a58cc7de372ff551), the manual trading challenge for Round 3 presents us with an opportunity to trade with a number of counterparties, each of whom have a reserve price ranging between `670` and `920` XIRENs. Our goal is to offer 2 bids for the counterparties that are at the best price for them to accept; we think that it is not required to place 2 bids, however it is encouraged to place 2 bids. For these bids, each of the counterparties will accept the lowest bid that is over their reserve price. For our second bid, in addition to the reserve price requirement, the counterparties will trade if our bid is higher than the average of all second bids from all participants; if our second bid is lower than the average of all second bids from all participants, then the probability of our second bid trading will be decreased. After these trades are made, we are able to sell the product we are trading for `920` XIRENs each.
 
-#### This round's manual trading challenge was mostly done by Tyler Thomas, in which he applied a Monte Carlo Simulation to find ideal bid amounts, and adjusted these numbers to be more conservative.
+#### Our work for this round's manual trading challenge can be found in our [round_3_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_3/round_3_manual_trading.py). Generally, our process for calculating potential optimal first and second bid pairs involves what we assume the second bid average from all participants would be (which we will discuss later). For now, assuming that we have provided an assumed second bid average, `avg_b2`:
+
+1. We start by looping through all potential first bid options (as the bid options range from `670` to `920`).
+2. For each first bid option, we see how many counterparties would trade with the first bid, and add their trades to our current profit.
+3. The remaining counterparties that did not trade with the first bid could potentially trade with out second bid, so we loop through all potential second bid options (assuming that the second bid needs to be higher than the first bid).
+4. We then find the counterparties that would be willing to trade with the second bid, taking into account their reserve prices and our assumed `avg_b2`, add their trades to a separate running profit for the second bids, and find the optimal second bid to associate alongside the first bid.
+5. Using this, we can find the optimal pair of a first and second bid that will yield the highest profit.
+
+#### Our process is essentially a brute force algorithm, however, as mentioned before, the main assumption we need to have for the algorithm is the second bid average of all participants. Similar to the Manual Challenge in Round 2, this second bid average is a complex and consequential aspect of trying to find the optimal bids for this round. As a result, we decided to create five potential scenarios on how the rest of the teams will choose their second bid.
+
+#### The first scenario involves a relatively even distribution of second bid picks, with the picks mostly being above 800. The main idea with this distribution was to provide a baseline of what a potentially optimal second bid would look like.
+
+```python
+# In round_3_manual_trading.py
+
+def second_bid_scenario_1():
+    """
+    Current assumptions on the player b2 (second bid) distribution:
+         5% pick 791
+        10% pick 820
+        10% pick 830
+        10% pick 840
+        15% pick 850
+        10% pick 860
+        10% pick 870
+        10% pick 880
+         8% pick 890
+         7% pick 900
+         5% pick 920
+    """
+```
+
+#### Using this distribution, the code outputted the following optimal pair of first and second bids:
+
+![round_3_manual_trading_code_output_scenario_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_code_output_scenario_1.png)
+
+#### The second scenario is more narrow than the first scenario, and had a distribution of second bids that was more concentrated between 840 and 920. The main idea with this distribution, and a few other subsequent scenarios, is that Tyler Thomas rightfully mentioned that it is likely that teams might choose higher second bids this round as opposed to what we were expecting in Round 2. This will be discussed later.
+
+```python
+# In round_3_manual_trading.py
+
+def second_bid_scenario_2():
+    """
+    Current assumptions on the player b2 (second bid) distribution:
+         3% pick 791
+         5% pick 840
+        15% pick 850
+        15% pick 860
+        15% pick 870
+        17% pick 880
+        18% pick 890
+         7% pick 900
+         5% pick 920
+    """
+```
+
+#### Using this distribution, the code outputted the following optimal pair of first and second bids:
+
+![round_3_manual_trading_code_output_scenario_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_code_output_scenario_2.png)
+
+#### The third scenario is even more narrow than the second scenario, and had a distribution of second bids that was more concentrated between 850 and 900:
+
+```python
+# In round_3_manual_trading.py
+
+def second_bid_scenario_3():
+    """
+    Current assumptions on the player b2 (second bid) distribution:
+         1% pick 791
+        15% pick 850
+        16% pick 860
+        17% pick 870
+        19% pick 880
+        19% pick 890
+        12% pick 900
+         1% pick 920
+    """
+```
+
+#### Using this distribution, the code outputted the following optimal pair of first and second bids:
+
+![round_3_manual_trading_code_output_scenario_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_code_output_scenario_3.png)
+
+#### The fourth scenario is similar to the third scenario, with the main change being that the distribution of second bids that was more concentrated around 860 and 900:
+
+```python
+# In round_3_manual_trading.py
+
+def second_bid_scenario_4():
+    """
+    Current assumptions on the player b2 (second bid) distribution:
+         1% pick 820
+         5% pick 850
+        16% pick 860
+        19% pick 870
+        22% pick 880
+        22% pick 890
+        14% pick 900
+         1% pick 910
+    """
+```
+
+#### Using this distribution, the code outputted the following optimal pair of first and second bids:
+
+![round_3_manual_trading_code_output_scenario_4](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_code_output_scenario_4.png)
+
+#### The fifth scenario goes the other way and tries to be more broad than the first scenario, increasing the concentration of second bids to between 761 and 920:
+
+```python
+# In round_3_manual_trading.py
+
+def second_bid_scenario_5():
+    """
+    Current assumptions on the player b2 (second bid) distribution:
+         5% pick 761
+         5% pick 781
+         5% pick 820
+        10% pick 830
+        10% pick 840
+        15% pick 850
+        10% pick 860
+        10% pick 870
+        10% pick 880
+         8% pick 890
+         7% pick 900
+         5% pick 920
+    """
+```
+
+#### Using this distribution, the code outputted the following optimal pair of first and second bids:
+
+![round_3_manual_trading_code_output_scenario_5](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_trading_code_output_scenario_5.png)
+
+#### From these scenarios, the code's optimal second bids were `857`, `872`, `876`, `878`, and `856` respectively. Generally, this does indicate that, assuming the accuracy and reliability of the code, a potentialy optimal second bid could be somewhere between 855 to 880, maybe around `860` or `870`. After some discussion, however, we decided to choose a higher second bid of `902`, for the reason mentioned earlier by Tyler Thomas. We knew that, when the results for the Manual Challenge of Round 2 were released, many teams ended up picking lower Speed allocations, and the general distribution of Speed allocations (or at least the allocations that were picked) were relatively similar to what we expected in our [round_2_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_2/round_2_manual_trading.py) code. However, it is also worth considering the possibility that many teams would have chosen to adapt as a result of this information, and would hence pick a higher second bid in this round to adjust from Round 2. This would shift the distribution of second bids up, and might end up causing our chosen second bid scenarios to be inaccurate. Another reason that potentially supported this change was that a similar change happened in last year's Prosperity 3 competition, in which many teams picked higher-numbed crates in the Round 2 Manual Challenge, and then proceeded to pick lower-numbered crates in the Round 4 Manual Challenge (I think). In addition, while we knew that the optimal second bid needs to be just above the average of the second bids of all participants, we also acknowledged that it is probably better to be way above the second bid average than being under it, as being under the average might mean our second bid will not trade at all, while we might still be able to gain some profit (albiet not the optimal amount of profit) from a second bid that is higher than the average.
+
+#### As a result, we decided to enter `902` as our second bid, and we were then able to reconfigure our brute force algorithm to find the optimal first bid to pair with a second bid of `902`. At some point, the night before the end of Round 3, we did end up deciding to lower our second bid to around `895`, however we both ended up forgetting to make the actual change on the IMC website, so our submission remained as follows:
+
+![round_3_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_manual_trading_submission.png)
 
 #### These are the results of our Round 3 manual trading challenge:
 
-![round_3_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_manual_results_1.gif)
-![round_3_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_manual_results_2.jpg)
-![round_3_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_3_manual_results_3.gif)
+![round_3_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_1.png)
+![round_3_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_2.png)
+![round_3_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_manual_results_3.png)
 
-#### ^^ It seems that both of our bids were higher than the participant averages, which might have meant that we were more likely to receive trades with the Sea Turtles and hence acquire more Flippers to sell.
+#### ^^ Overall, we did pretty well in the Round 3 Manual Challenge. However, as the average second bid ended up actually being `859`, it was very clear that we had overestimated the increase in magnitude other teams would place in their second bids. In hindsight, our code scenarios did seem to have more "optimal" answers (although we're not sure if the second bids of `856` and `857` from Scenarios 1 and 5 would have been better, as they were under the actual second bid average), which we found very interesting. Perhaps some of the scenarios like Scenarios 2, 3, and 4 did end up taking into account concerns of higher second bids from other teams enough such that it was reliable enough to follow. Either way, we found our second bid of `902` to be reasonable in the moment, and we plan to reflect on how we can improve our predictions in future scenarios.
+
+### Overall Round Result
+
+![round_3_overall_result](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_3_overall_result.png)
+
+#### ^^ In total, we made around 76,536 XIRENs in Round 3, with a good amount of which coming from our manual trading performance.
 </details>
 
 ---
