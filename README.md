@@ -814,28 +814,41 @@ class Trader:
 
 #### Using the provided Data Capsule that allowed us to view historical prices of `HYDROGEL_PACK`, `VELVETFRUIT_EXTRACT`, and the ten vouchers. Using the historical prices, we constructed the following price graphs of the products:
 
+#### Hydrogel Packs:
 ![hydrogel_packs_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/hydrogel_packs_historical_prices_day_0.png)
 
+#### Velvetfruit Extract:
 ![velvetfruit_extract_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/velvetfruit_extract_historical_prices_day_0.png)
 
+
+#### VEV_4000:
 ![vev_4000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4000_historical_prices_day_0.png)
 
+#### VEV_4500:
 ![vev_4500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_4500_historical_prices_day_0.png)
 
+#### VEV_5000:
 ![vev_5000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5000_historical_prices_day_0.png)
 
+#### VEV_5100:
 ![vev_5100_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5100_historical_prices_day_0.png)
 
+#### VEV_5200:
 ![vev_5200_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5200_historical_prices_day_0.png)
 
+#### VEV_5300:
 ![vev_5300_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5300_historical_prices_day_0.png)
 
+#### VEV_5400:
 ![vev_5400_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5400_historical_prices_day_0.png)
 
+#### VEV_5500:
 ![vev_5500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_5500_historical_prices_day_0.png)
 
+#### VEV_6000:
 ![vev_6000_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_6000_historical_prices_day_0.png)
 
+#### VEV_6500:
 ![vev_6500_historical_prices_day_0](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vev_6500_historical_prices_day_0.png)
 
 #### Due to time constraints, we ended up trying to only trade the `HYDROGEL_PACK`. We began with the general strategy we used for the `ASH_COATED_OSMIUM` in Round 2, and tried different variations and thresholds of the strategy in our test submissions to see if a particular variation worked for the `HYDROGEL_PACK`. Our thought process for this is that the historical price graph for the `HYDROGEL_PACK` did seem similar to the `ASH_COATED_OSMIUM` in that they both do seem to be "delta-1" products.
