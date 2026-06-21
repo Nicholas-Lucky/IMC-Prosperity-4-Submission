@@ -1075,7 +1075,7 @@ def second_bid_scenario_5():
 
 ---
 <details>
-<summary><h2>Round 4 🍪</h2></summary>
+<summary><h2>Round 4 🔮</h2></summary>
 
 ### Algorithmic Trading
 #### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-The-More-The-Merrier-34ee8453a0938059b604db93deaf0e29), no new products were introduced in Round 4, and we would still trade the same `HYDROGEL_PACK`, `VELVETFRUIT_EXTRACT`, and Velvetfruit Extract Vouchers products. The main addition in this round is that counterparty information from a trader named Mark (either that, or there is counterparty information from many traders, however they are all named Mark).
