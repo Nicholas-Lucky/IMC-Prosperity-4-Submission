@@ -190,6 +190,10 @@ def main():
 
     # calculate_probability_final_underlying_price_greater_than(35 - 4.35)
     # calculate_probability_final_underlying_price_greater_than(62.05)
+
+    # Added for documentation purposes
+    print("\nround_4_manual_trading_information_gathering.py output:\n")
+
     calculate_probabilities_and_mean_payoffs()
 
 main()

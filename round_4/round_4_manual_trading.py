@@ -226,6 +226,10 @@ class Available_Trades:
 
 def main():
     round_4_manual_trading_market = Available_Trades()
+
+    # Added for documentation purposes
+    print("\nround_4_manual_trading.py output:\n")
+
     round_4_manual_trading_market.calculate_and_print_trade_decisions()
 
 main()

@@ -1137,7 +1137,7 @@ def second_bid_scenario_5():
 #### it is clear that we were lucky to have made any form of profit in this algorithm round. Although our algorithm did peak at around 20,000 XIRENs, our algorithm was unable to secure these profits, and it seemed that our profit would have easily also went the other way around into the negatives. From this, our algorithm still is not stable enough to be considered safe and steady in making profit.
 
 ### Manual Trading
-#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-The-More-The-Merrier-34ee8453a0938059b604db93deaf0e29), the manual trading challenge for Round 4 seems to be a list of options that we need to choose whether to trade, how to trade, and how much to trade. The underlying product is the `AETHER_CRYSTAL`, which is said to have Geometric Bronian Motion, zero risk-neutral draft, and a fixed volatlity of 251%. Alongside being able to choose to trade the `AETHER_CRYSTAL`, we also have 11 options we can choose to trade. 8 of the options are vanilla options, which can be either a call or put option with their own respectice strike prices and either 2 or 3 week expiry dates. The other 3 options are exotic options, which each have special behaviours: the Chooser option expires in 3 weeks, however, 2 weeks in, it automatically chooses whether to become a call or a put depending on "where the money is at the time"; the Binary Put option has an all-or-nothing payoff, meaning that, at expiry, it will pay the specified amount if the underlying price is below the strike price, and will not pay anything otherwise; the Knock-Out Put option is similar to a regular put, however, if the underlying price ever goes below the strike price at any point in time, the option will become worthless.
+#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-The-More-The-Merrier-34ee8453a0938059b604db93deaf0e29), the manual trading challenge for Round 4 seems to be a list of options that we need to choose whether to trade, how to trade, and how much to trade. The underlying product is the `AETHER_CRYSTAL`, which is said to have Geometric Brownian Motion, zero risk-neutral draft, and a fixed volatlity of 251%. Alongside being able to choose to trade the `AETHER_CRYSTAL`, we also have 11 options we can choose to trade. 8 of the options are vanilla options, which can be either a call or put option with their own respectice strike prices and either 2 or 3 week expiry dates. The other 3 options are exotic options, which each have special behaviours: the Chooser option expires in 3 weeks, however, 2 weeks in, it automatically chooses whether to become a call or a put depending on "where the money is at the time"; the Binary Put option has an all-or-nothing payoff, meaning that, at expiry, it will pay the specified amount if the underlying price is below the strike price, and will not pay anything otherwise; the Knock-Out Put option is similar to a regular put, however, if the underlying price ever goes below the strike price at any point in time, the option will become worthless.
 
 #### It is also worth noting that a week in this context is 5 trading days, and there are 252 trading days a year. The IMC wiki provides us with the following code snippet as an elaboration:
 
@@ -1158,27 +1158,109 @@ def steps_for_weeks(weeks: float) -> int:
 
 ![round_4_manual_trading_options](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_options.png)
 
-#### TK
+#### Our work for the Round 4 Manual Challenge can be found in our [round_4_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_4/round_4_manual_trading.py) and [round_4_manual_trading_information_gathering.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_4/round_4_manual_trading_information_gathering.py). Both files has slightly different purposes, however the main algorithms in the files are mostly the same. Both files use a Monte Carlo to run a lot of simulations (around 50,000 or 100,000 runs respectively) that simulate the underlying price of the `AETHER_CRYSTAL` (abbreviated to `AC`). In each simulation, we repeatedly apply the Geometric Brownian Motion onto the current `AC` price until the `AC` "expires"; after the underlying `AC` price is completed, we can use this final price (and the previous prices that the `AC` product changed to) as information to compare with our potential options. After we run all of our Monte Carlo simulations, we can aggregate this options information that we obtained from each simulation to inform our expected profit from each option (or other information such as expected probability relating to each option).
+
+#### This is a simplified version of our Monte Carlo algorithm (for demonstration, might not be fully accurate what we have in our code files):
 
 ```python
-# In round_4_manual_trading.py
+# Helper Simulation Function
+def run_path(self, expiry_in_days, starting_price):
+    dt = 1 / (TRADING_DAYS_PER_YEAR * STEPS_PER_DAY)
 
-def scale_round_2_to_round_2(x_array, y_array):
-    for i, j in enumerate(x_array):
-        x_array[i] = (j * 10) / 9
+    S_t = starting_price
+    path = [starting_price]
 
-    # Previously y_array[i] = (j * 5) / 11.807
-    # Now j / 2 because we're guessing that with 2x more options, a Round 4 suitcase will have half as many picks as a Round 2 crate
-    for i, j in enumerate(y_array):
-        y_array[i] = (j / 2)
+    # Change the underlying AC price using Geometric Brownian Motion until it expires
+    for i in range(expiry_in_days * STEPS_PER_DAY):
+        Z = gauss(mu=0, sigma=1)
+
+        # vv a potential Geometric Brownian Motion formula?
+        # S_after_dt = S_t * exp(-0.5 * (VOLATILITY ** 2) * dt + VOLATILITY * sqrt(dt) * Z)
+
+        """ Basically apply the Geometric Brownian Motion formula on the underlying AC price
+            to simulate it changing, and keep track of the new price by adding it to path """
+        
+        S_t = S_t * exp(-0.5 * (VOLATILITY ** 2) * dt + VOLATILITY * sqrt(dt) * Z)
+        path.append(S_t)
+    
+    return path
+
+# Main Monte Carlo Function
+def run_monte_carlo(self, starting_price):
+    # Could also be 100,000
+    NUMBER_OF_SIMULATIONS = 50_000
+
+    # Have some lists that we can use to store the results of each simulation in
+    example_list_1 = []
+    example_list_2 = []
+    example_list_3 = []
+
+    for i in range(NUMBER_OF_SIMULATIONS):
+        # Simulate the underlying AC price and how it changes until it expires, in this case in 21 trading days
+        twenty_one_day_path = run_path(21, starting_price)
+
+        """ Some options expire or have extra behavior at around the 14 day mark, so this lets us look
+            at what the underlying AC price is at the 14 day mark from our simulation (also so this way
+            we don't need to rerun the simulation again only for the 14 day path) """
+        
+        fourteen_day_path = twenty_one_day_path[:(14 * STEPS_PER_DAY) + 1]
+
+        # At this point, twenty_one_day_path and fourteen_day_path will be a list of underlying AC prices
+
+        # Use twenty_one_day_path and fourteen_day_path to compare or calculate with our potential options
+        # Store the results of these ^^ in a list to aggregate later like example_list_1, example_list_2, example_list_3, etc.
+    
+    # Aggregate our simulation results for each option!
 ```
+
+#### [round_4_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_4/round_4_manual_trading.py) was used to try and directly compute the expected fair values of each option, and display a choice on whether to buy or sell each option, and by what magnitude to do so. The code also reruns the Monte Carlo to calculate the fair value and delta of each option, and uses it to choose whether to buy or sell the underlying `AC` product, and by what magnitude to do so. Currently, the code as it is outputs the following:
+
+![round_4_manual_trading_code_output_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_code_output_1.png)
+
+#### ^^ As seen in the output, it seems that the code output encourages us to buy almost every single option. We found this to be confusing, and a little unlikely, further emphasized by Tyler Thomas.
+
+#### [round_4_manual_trading_information_gathering.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_4/round_4_manual_trading_information_gathering.py) is more focused on gathering intermediate information to potentially better inform our decisions on what options to pick instead of choosing the options for us. This includes information on the underlying `AC` price itself, and probabilities that each option will be profitable when it expires (given the change in the underlying `AC` price) along with their mean payoff. Currently the code as it is outputs the following:
+
+![round_4_manual_trading_code_output_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_code_output_2.png)
+
+#### Eventually, we decided to submit the following order of options:
+
+![round_4_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_submission.png)
+
+#### We ended up deciding not to buy or sell the underlying `AC` product, as we didn't really know what the implications of the product were enough to be confident enough in doing so. We chose to buy `AC_50_P` and `AC_50_C` with volumes of `50`, as these options seemed to have the broadest thresholds and hence seem to be some of the safest options that cover each other relatively well depending on how low or high the underlying `AC` price finishes at. We chose not to buy or sell `AC_35_P` and `AC_45_P`, as we thought that these options were a little too narrow, and overlapped in general with `AC_50_P` (we generally tried to make a portfolio of options that was diversified enough that it could cover as many possibilities of the underlying `AC` price as possible, while not having too much overlap among the options). We chose to buy `AC_40_P` and `AC_60_C` with volumes of `30` and `10` respectively, as we thought that these options made sense to include as a secondary layer of options that captured more extreme underlying `AC` prices. We also decided to buy `AC_50_P_2` and `AC_50_C_2` with volumes of `25` and `40` respectively, as we thought that the underlying `AC` price would be less volatile at the 14 day mark (as it would have 7 less days to change). Tyler Thomas chose to sell the `AC 50 CO` option with a volume of `50`. We chose to buy `AC 40 BP` with a small volume of `5`, in case `AC 40 BP` ended up being worthwhile. We also chose to buy `AC 45 KO` with a volume of `150`, as we thought that the low price of `AC 45 KO` would allow us to lose less profit if the underlying `AC` price renders it worthless, while allowing us to gain a lot more profit if the underlying `AC` price never breaks the strike price. Regarding the volumes of `AC_40_P`, `AC_60_C`, `AC_50_P_2`, and `AC_50_C_2`, we generally tried balancing out the volumes of calls and puts to maintain some stability in our portfolio.
 
 #### These are the results of our Round 4 manual trading challenge:
 
-![round_4_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_results_1.gif)
-![round_4_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_results_2.jpg)
+![round_4_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_1.png)
+![round_4_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_2.png)
 
-#### It is very clear that Tyler Thomas's predictions were correct.
+#### It is very clear that Tyler Thomas's choice of selling the `AC_50_CO` option was the biggest factor in our profit in this Manual Trading round. Surprisingly, `AC_50_P_2` and `AC_50_C_2` turned out to not be worthwhile, which I was surprised by. In hindsight, this kind of made sense, in that this might have meant that the underlying `AC` price ended up being too stable by the 14 day mark, and wasn't volatile enough to decrease or increase enough to make `AC_50_P_2` or `AC_50_C_2` profitable. In addition, our choice of buying `AC_45_KO` ended up not being the best choice as well. While we did agree that our choices seemed reasonable in the moment, it does seem that there could have been some room for improvement in the future.
+
+#### Further information on the individual options upon submission can be viewed below:
+
+<details>
+<summary><h2>Individual Options Results 💎</h2></summary>
+
+![round_4_manual_trading_results_3_AC](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC.png)
+![round_4_manual_trading_results_3_AC_50_P](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_50_P.png)
+![round_4_manual_trading_results_3_AC_50_C](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_50_C.png)
+![round_4_manual_trading_results_3_AC_35_P](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_35_P.png)
+![round_4_manual_trading_results_3_AC_40_P](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_40_P.png)
+![round_4_manual_trading_results_3_AC_45_P](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_45_P.png)
+![round_4_manual_trading_results_3_AC_60_C](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_60_C.png)
+![round_4_manual_trading_results_3_AC_50_P_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_50_P_2.png)
+![round_4_manual_trading_results_3_AC_50_C_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_50_C_2.png)
+![round_4_manual_trading_results_3_AC_50_CO](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_50_CO.png)
+![round_4_manual_trading_results_3_AC_40_BP](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_40_BP.png)
+![round_4_manual_trading_results_3_AC_45_KO](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_results_3_AC_45_KO.png)
+
+</details>
+
+### Overall Round Result
+
+![round_4_overall_result](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_overall_result.png)
+
+#### ^^ In total, we made around 72,079 XIRENs in Round 4, most of which coming from our manual trading performance.
 </details>
 
 ---
