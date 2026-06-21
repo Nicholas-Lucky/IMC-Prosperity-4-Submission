@@ -1137,23 +1137,28 @@ def second_bid_scenario_5():
 #### it is clear that we were lucky to have made any form of profit in this algorithm round. Although our algorithm did peak at around 20,000 XIRENs, our algorithm was unable to secure these profits, and it seemed that our profit would have easily also went the other way around into the negatives. From this, our algorithm still is not stable enough to be considered safe and steady in making profit.
 
 ### Manual Trading
-#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-19ee8453a0938112aa5fd7f0d060ffe6), the manual trading challenge for Round 4 was a game of "Seal or No Seal", which was similar to the manual trading challenge for Round 2. In the challenge, a grid of suitcases was presented, with each suitcase containing a base amount of 10,000 SeaShells, a multiplier, and a predefined number of contestants we will need to share the SeaShells of the suitcase with. The final amount of SeaShells that will be awarded from a suitcase will also be influenced by the percentage of participants who pick that particular suitcase. We are able to choose up to 3 suitcases, with the first suitcase being free to pick, the second suitcase requiring an initial 50,000 SeaShell fee, and the third suitcase requiring an initial 100,000 SeaShell fee (if we remember correctly).
+#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-The-More-The-Merrier-34ee8453a0938059b604db93deaf0e29), the manual trading challenge for Round 4 seems to be a list of options that we need to choose whether to trade, how to trade, and how much to trade. The underlying product is the `AETHER_CRYSTAL`, which is said to have Geometric Bronian Motion, zero risk-neutral draft, and a fixed volatlity of 251%. Alongside being able to choose to trade the `AETHER_CRYSTAL`, we also have 11 options we can choose to trade. 8 of the options are vanilla options, which can be either a call or put option with their own respectice strike prices and either 2 or 3 week expiry dates. The other 3 options are exotic options, which each have special behaviours: the Chooser option expires in 3 weeks, however, 2 weeks in, it automatically chooses whether to become a call or a put depending on "where the money is at the time"; the Binary Put option has an all-or-nothing payoff, meaning that, at expiry, it will pay the specified amount if the underlying price is below the strike price, and will not pay anything otherwise; the Knock-Out Put option is similar to a regular put, however, if the underlying price ever goes below the strike price at any point in time, the option will become worthless.
 
-![round_4_manual](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual.png)
+#### It is also worth noting that a week in this context is 5 trading days, and there are 252 trading days a year. The IMC wiki provides us with the following code snippet as an elaboration:
 
-#### The formula for calculating the final amount of SeaShells awarded from a suitcase remains identical to the formula used in the manual trading challenge of Round 2:
-#### $\text{Final Amount}=\frac{10,000 * \text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}$
+```python
+TRADING_DAYS_PER_YEAR = 252
+STEPS_PER_DAY = 4
+STEPS_PER_YEAR = TRADING_DAYS_PER_YEAR * STEPS_PER_DAY
 
-#### Our work for this round's manual trading challenge can be found in [round_4_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_4/round_4_manual_trading.py). Given that this manual trading challenge had more options to choose than the manual trading challenge of Round 2, we felt a lot more comfortable with picking a second suitcase, as we hoped that the participants' picks will be distributed enough across all the suitcases to leave many of the suitcases profitable as a second choice. Identical to the manual trading challenge of Round 2, the "final multiplier" needed for a suitcase to be profitable as a second choice needs to be greater than or equal to 5:
-#### $\frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge5$
+def weeks_to_years(weeks: float) -> float:
+    # 5 business days per week, annualized to 252 trading days
+    return (weeks * 5) / TRADING_DAYS_PER_YEAR
 
-#### Calculating the `max_percentage` of participants who can pick a suitcase for the suitcase to be profitable has a second choice, for all suitcases, yielded the following output:
+def steps_for_weeks(weeks: float) -> int:
+    return int(round(weeks * 5 * STEPS_PER_DAY))
+```
 
-![round_4_manual_code_output_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_code_output_1.jpg)
+#### During the submission, the underlying price of the `AETHER_CRYSTAL` (abbreviated to `AC` in the manual trading submission) will be simulated 100 times, and the PnL we receive from these 100 simulations will be averaged into our final PnL that we receive for the manual trading round. Our goal is to choose a set of options (potentially including the `AETHER_CRYSTAL` product itself) that will allow us to have a safe expected (and ideally the highest actual) PnL. The IMC game website also provides us with extra information on the `AC` product and the available options in the submission page for this manual trading challenge:
 
-#### ^^ The maximum percentages for the suitcases sum up to around 125%, which we interpret as a certainty that there will exist at least one suitcase that is profitable as a second choice.
+![round_4_manual_trading_options](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_manual_trading_options.png)
 
-#### In attempting to narrow down the safest and most profitable suitcases, we graphed line graphs of the suitcases and their respective `max_percentage` of participants alongside the final distribution of crate picks from Round 2's manual trading challenge (given to us in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-19ee8453a0938112aa5fd7f0d060ffe6)). The x-axis of the graph is the displayed multiplier of the suitcases/crates, and the y-axis of the graph is the percentage of participants that are expected to/actually pick a particular suitcase/crate. We also attempted to account for the differences in scenarios between the two manual trading challenges by scaling the distribution of Round 2 crate picks to better fit the condition of the Round 4 suitcases.
+#### TK
 
 ```python
 # In round_4_manual_trading.py
@@ -1167,43 +1172,6 @@ def scale_round_2_to_round_2(x_array, y_array):
     for i, j in enumerate(y_array):
         y_array[i] = (j / 2)
 ```
-
-#### The unmodified line graphs are displayed in the graph titled _**Round 2 (RAW values) vs Round 4 (IDEAL)**_, while the modified line graphs are displayed in the graph titled _**Round 2 (SCALED values) vs Round 4 (IDEAL)**_.
-
-![round_4_manual_code_output_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_code_output_2.jpg)
-![round_4_manual_code_output_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_code_output_3.jpg)
-
-#### ^^ We interpreted _**Round 2 (SCALED values) vs Round 4 (IDEAL)**_ to mean that, if participants picked suitcases the same way they picked the crates in Round 2's manual trading challenge, the following suitcases would be profitable as a second choice:
-1. x10 Multiplier, 1 Contestant
-2. x23 Multiplier, 2 Contestants
-3. x30 Multiplier, 2 Contestants
-4. x31 Multiplier, 2 Contestants
-5. x37 Multiplier, 3 Contestants
-6. x40 Multiplier, 3 Contestants
-7. x41 Multiplier, 3 Contestants (optimal)
-8. x47 Multiplier, 3 Contestants (optimal)
-9. x50 Multiplier, 4 Contestants
-10. x60 Multiplier, 4 Contestants
-11. x70 Multiplier, 4 Contestants
-12. x73 Multiplier, 4 Contestants
-13. x89 Multiplier, 8 Contestants
-
-#### From _**Round 2 (SCALED values) vs Round 4 (IDEAL)**_, it would seem that the suitcases with (x41 Multiplier, 3 Contestants) and (x47 Multiplier, 3 Contestants) are the safest and most profitable to pick. Tyler Thomas, however, pointed out that it is unlikely that the participants' picks will be identical to Round 2's manual trading challenge, and considered the possibility of participants now being less likely to pick suitcases with higher multipliers: in Round 2's manual trading challenge, the crates with the highest multipliers were the most frequently picked; with these crates turning out to not be profitable, participants may be less inclined to pick suitcases with higher multipliers in this round's manual trading challenge; if this is the case, suitcases with higher multipliers would be picked less frequently, while the rest of the suitcases would be picked more frequently; consequently, suitcases with higher multipliers would be the most profitable, while the suitcases with multipliers between 30-50, while still safe, would be less profitable than what our line graphs imply. After some discussion and consideration of both the line graphs and Tyler's remarks, we ended up choosing the following suitcases:
-1. x89 Multiplier, 8 Contestants
-2. x90 Multiplier, 10 Contestants
-
-#### We also considered the possibility of choosing a third suitcase, however we quickly decided against such a choice, as we felt that it was very unlikely, even more so than the possibility of a second crate pick in Round 2's manual trading challenge, that any of the suitcases would be profitable as a third choice. This is supported by a slightly modified version of round_4_manual_trading.py, in which we changed `max_percent_to_be_profitable` from `5` to `10`; in hindsight, it seems that `max_percent_to_be_profitable` should have been renamed to `max_multiplier_to_be_profitable`.
-
-#### $10,000 * \frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge100,000$
-#### $\frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge\frac{100,000}{10,000}$
-#### $\frac{\text{Multiplier}}{\text{Inhabitants} + (\text{Participant Pick Percentage} * 100)}\ge10$
-
-![round_4_manual_code_output_4](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_manual_code_output_4.jpg)
-
-#### ^^ It is worth noting that, as supported by the code, the suitcases with (x100 Multiplier, 15 Contestants) and (x90 Multiplier, 10 Contestants) would not be profitable as a third choice regardless of how frequently they are picked, as their predefined number of contestants would be enough to reduce the multiplier below 10. As an example, if 0% of participants picked suitcase (x90 Multiplier, 10 Contestants), suitcase (x90 Multiplier, 10 Contestants) would have awarded 90,000 SeaShells, which is not enough to cover the initial 100,000 SeaShell fee of a third choice.
-#### $\text{Final Amount}=\frac{10,000 * 90}{10 + (0 * 100)}$
-#### $\text{Final Amount}=\frac{900,000}{10}$
-#### $\text{Final Amount}=90,000\text{ SeaShells}<100,000\text{ SeaShells (Initial Fee)}$
 
 #### These are the results of our Round 4 manual trading challenge:
 
