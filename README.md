@@ -1078,206 +1078,63 @@ def second_bid_scenario_5():
 <summary><h2>Round 4 🍪</h2></summary>
 
 ### Algorithmic Trading
-#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-19ee8453a0938112aa5fd7f0d060ffe6), Round 4 introduced us to the `MAGNIFICENT_MACARONS`, a tradable product whose value is dependent on multiple factors such as `transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex` — at least we assumed that these are factors that can influence the value of `MAGNIFICENT_MACARONS`. The wiki provided us with a hint that, if `sunlightIndex` went and remained below a threshold called the CriticalSunlightIndex (CSI), then `sugarPrice` and `MAGNIFICENT_MACARONS` prices would increase; otherwise, `sugarPrice` and `MAGNIFICENT_MACARONS` prices would maintain their respective fair values.
+#### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-The-More-The-Merrier-34ee8453a0938059b604db93deaf0e29), no new products were introduced in Round 4, and we would still trade the same `HYDROGEL_PACK`, `VELVETFRUIT_EXTRACT`, and Velvetfruit Extract Vouchers products. The main addition in this round is that counterparty information from a trader named Mark (either that, or there is counterparty information from many traders, however they are all named Mark).
 
-#### It is worth noting that it seems that `MAGNIFICENT_MACARONS` is the only newly-introduced tradable product this round; `transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex` are not tradable. In addition, we found that information regarding the `transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex` for a specific iteration was found in `state.observations.conversionObservations`; it seems that `state.observations.conversionObservations` contains the conversion observations for all products, including the `MAGNIFICENT_MACARONS`, so we would need to access the item in `state.observations.conversionObservations` with `"MAGNIFICENT_MACARONS"` as the key. Finally, it seems that it is possible to perform conversions with the `MAGNIFICENT_MACARONS`, with `MAGNIFICENT_MACARONS` having a conversion limit of `10`. Due to inexperience and time constraints, we decided not to attempt to interact with conversions for `MAGNIFICENT_MACARONS`.
+#### We ended up deciding not to work on counterparty information due to time constraints and a lack of confidence in our current trading algorithm (we would rather use the time we had to try and find a more robust strategy for trading the `HYDROGEL_PACK`, `VELVETFRUIT_EXTRACT`, and potentially the Velvetfruit Extract Vouchers).
 
-#### `MAGNIFICENT_MACARONS` has a position limit of `75`.
-
-#### At the end of Round 3 and the start of Round 4, we decided to refactor our code to make our `Trader` class easier to read and implement. We created a `Product` class to house the relevant information for each of our tradable products. We hope that this form of abstraction would allow for our `Trader` class to be more understandable and concise, especially if we needed to scroll through the class for a specific code snippet.
+#### In our submission, our algorithm was unfortunately only trading the `HYDROGEL_PACK` product, however a few changes were made to the `HYDROGEL_PACK` trading algorithm to hopefully make it more robust. For one, our buy and sell thresholds now included the fair value (which we took as the average of the recent historical mid prices) in addition to EMA. We hoped that this would add stability to the algorithm, as we were previously only relying on EMA for the buy and sell thresholds:
 
 ```python
-# In round_4_experimental.py
+# In round_4.py
 
-class Product:
-    def __init__(self, name, sell_order_history, buy_order_history, current_position):
-        # Name
-        self.name = name
-
-        # Sell order history
-        self.sell_order_history = sell_order_history
-        self.sell_order_average = get_average(self.sell_order_history)
-
-        # Buy order history
-        self.buy_order_history = buy_order_history
-        self.buy_order_average = get_average(self.buy_order_history)
-
-        # Mid Price
-        self.average_mid_price = (self.sell_order_average + self.sell_order_average) / 2
-
-        # Position information
-        self.position = current_position
-        self.position_limit = get_position_limits()[name]
-
-        # Default buy and sell thresholds
-        self.default_offset = self.calculate_offset(10, 3)
-        self.current_offset = self.default_offset
-        self.acceptable_buy_price = self.average_mid_price - self.default_offset
-        self.acceptable_sell_price = self.average_mid_price + self.default_offset
-
-    # Other functionality and methods for the Product class...
-```
-
-#### We also created a `Macaron` child class that inherits the general setup of the `Product` class and houses additional information and calculations specific to the `MAGNIFICENT_MACARONS` product. In hindsight, it does seem that we ended up not using any of the `Product` class functionality in the `Macaron` child class, so it may have been optional for the `Macaron` class to be a child class.
-
-```python
-# In round_4_experimental.py
-
-class Macaron(Product):
-    def __init__(self, name, sell_order_history, buy_order_history, current_position, observation_info_history, current_observation_info):
-        #super().__init__(name, sell_order_history, buy_order_history, current_position)  # Commented out
-
-        # Add the initializer logic...
-```
-
-#### To further support the abstraction of our products' information in the `Trader` class, we created a function called `initialize_product_information()` to return a dictionary that houses the product names as keys and a respective `Product` or `Macaron` (for `MAGNIFICENT_MACARONS`) class as values. We were also able to use `initialize_product_information()` to set the buy and sell thresholds for `PICNIC_BASKET1` and `PICNIC_BASKET2` based on our previous calculations with the products contained in these baskets, and manually set offsets for the thresholds.
-
-```python
-# In round_4_experimental.py
-
-def initialize_product_information(products, sell_order_history, buy_order_history, current_positions, observation_info_history, current_observation_info):
-    product_info = {}
-    for product in products:
-        if product == "MAGNIFICENT_MACARONS":
-            product_info["MAGNIFICENT_MACARONS"] = Macaron(product, sell_order_history[product], buy_order_history[product], current_positions[product], observation_info_history, current_observation_info)
-            continue
-        product_info[product] = Product(product, sell_order_history[product], buy_order_history[product], current_positions[product])
+# In the Strategy class
     
-    # Set picnic basket buy and sell thresholds
-    # ...
+    # In the trade_hydrogel_pack() function
 
-    # Manual offset adjustments
-    # ...
-
-    # Return the products' information
-    return product_info
-```
-
-#### For calculating the buy and sell thresholds for the `MAGNIFICENT_MACARONS` in particular, we began by keeping track of both the product's `sell_order_history` and `buy_order_history`, which we used to calculate the averages of the histories, and these average of the 2 averages, which we called the `historical_average_mid_price`. From there, we also kept track of the possible factors influencing the value of `MAGNIFICENT_MACARONS` (`transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex`) through `state.observations.conversionObservations`. From this, we were able to build an `observation_info_history`, similar to how we built `sell_order_history` and `buy_order_history`, to compare with the current values of the factors during an iteration.
-
-```python
-# In round_4_experimental.py
-# In the Trader class
-
-macaron_state = state.observations.conversionObservations["MAGNIFICENT_MACARONS"]
-
-# Initialize product information
-products = initialize_product_information(PRODUCT_NAMES, sell_order_history, buy_order_history, current_positions, previous_macaron_information, macaron_state)
-
-previous_macaron_information["askPrice"].append(macaron_state.askPrice)
-previous_macaron_information["bidPrice"].append(macaron_state.bidPrice)
-previous_macaron_information["exportTariff"].append(macaron_state.exportTariff)
-previous_macaron_information["importTariff"].append(macaron_state.importTariff)
-previous_macaron_information["sugarPrice"].append(macaron_state.sugarPrice)
-previous_macaron_information["sunlightIndex"].append(macaron_state.sunlightIndex)
-previous_macaron_information["transportFees"].append(macaron_state.transportFees)
-```
-
-#### Given the historical values of `transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex`, we calculated the values' mean and standard deviations. We then used the current values (of a current iteration) of `transportFees`, `exportTariff`, `importTariff`, `sugarPrice`, and `sunlightIndex` to calculate the normalized values of these current values using the following formula:
-
-#### $x_{normalized}=\frac{x-\text{Mean}}{\text{Standard Deviation}}$
-
-```python
-# In round_4_experimental.py
-# In the Macaron class
-
-self.export_tariff = current_observation_info.exportTariff
-self.import_tariff = current_observation_info.importTariff
-self.sugar_price = current_observation_info.sugarPrice
-self.sunlight = current_observation_info.sunlightIndex
-self.transport_fees = current_observation_info.transportFees
-
-# ...
-
-self.normalized_export_tariff = 0
-if self.historical_export_tariff_std != 0:
-    self.normalized_export_tariff = (self.export_tariff - self.historical_export_tariff_mean) / self.historical_export_tariff_std
-
-# ^^ similar normalization calculations done for the rest of the factors
-```
-
-#### We then took a weighted sum of these normalized values, which we used as both our buy and sell thresholds for `MAGNIFICENT_MACARONS`.
-
-```python
-# In round_4_experimental.py
-# In the Macaron class
-
-self.MVI_multiplier = (self.normalized_export_tariff * self.export_tariff_weight) + \
-                      (self.normalized_import_tariff * self.import_tariff_weight) + \
-                      (self.normalized_sugar_price * self.sugar_price_weight) + \
-                      (self.normalized_sunlight * self.sunlight_weight) + \
-                      (self.normalized_transport_fees * self.transport_fees_weight)
-
-self.hybrid_average_mid_price = (0.3 * self.historical_average_mid_price) + (0.7 * self.current_average_mid_price)
-self.acceptable_buy_price = self.hybrid_average_mid_price * self.MVI_multiplier
-self.acceptable_sell_price = self.acceptable_buy_price
-```
-
-#### The weights for the factors are as follows:
-
-```python
-# In round_4_experimental.py
-# In the Macaron class
-
-self.export_tariff_weight = 0.1
-self.import_tariff_weight = 0.1
-self.sugar_price_weight = 0.1
-self.sunlight_weight = -0.4
-self.transport_fees_weight = 0.1
-```
-
-#### ^^ These weights are currently hardcoded, and were chosen so that `sunlightIndex` would have a greater impact on the value of `MAGNIFICENT_MACARONS` than the rest of the factors, given the hint provided by the competition; `self.sunlight_weight` was set to `-0.4` instead of `0.4` because, if the hint is accurate, a low enough `sunlightIndex` could cause higher `MAGNIFICENT_MACARONS` prices — implying a negative relationship between `sunlightIndex` and `MAGNIFICENT_MACARONS`.
-
-#### Regarding our past products, we found through [round_4_resin_only.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_4/round_4_resin_only.py) that using both a `sell_order_history` and `buy_order_history` to calculate the buy and sell thresholds allowed us to achieve noticeably more profits from `RAINFOREST_RESIN` than with just `sell_order_history`. As a result, we decided to add this change to all the past products. We would track previous buy orders in `buy_order_history`, similarly to how we tracked previous sell orders in `sell_order_history`. In calculating the buy and sell thresholds of a product, we would then take the averages of `sell_order_history` and `buy_order_history`, and find the average of these two averages.
-
-```python
-# In round_4_resin_only.py
-
-class Product:
-    def __init__(self, name, sell_order_history, buy_order_history, current_position):
         # ...
         
-        self.acceptable_buy_price = (self.sell_order_average + self.buy_order_average) / 2 - self.default_offset
-        self.acceptable_sell_price = (self.sell_order_average + self.buy_order_average) / 2 + self.default_offset
+        recent_mid_prices = hydrogel_pack.mid_order_history[-20:]
+        current_mid_price = (highest_buy_order + lowest_sell_order) / 2
 
-# ...
+        fair_value = mean(recent_mid_prices)
 
-def initialize_product_information(products, sell_order_history, buy_order_history, current_positions):
-    # ...
+        # ...
+
+        ema = hydrogel_pack.calculate_EMA(highest_buy_order, lowest_sell_order)
+        spread = abs(lowest_sell_order - highest_buy_order)
+        position_skew = 0.15
+
+        # ...
+
+        adjusted_fair_value = (0.2 * fair_value) + (0.8 * ema)
+        acceptable_buy_price = int(adjusted_fair_value - (spread / 8))
+        acceptable_sell_price = int(adjusted_fair_value + (spread / 8))
+```
+
+#### We also changed our conditions of selling to involve the current mid price, and to leave the buying and selling conditions independent of each other:
+
+```python
+# In round_4.py
+
+# In the Strategy class
     
-    product_info["RAINFOREST_RESIN"].set_buy_price_offset(0)
-    product_info["RAINFOREST_RESIN"].set_sell_price_offset(0)
+    # In the trade_hydrogel_pack() function
 
-# ...
+        # ...
 
-# In the Trader class
-best_bid, best_bid_amount = get_highest_buy_order(list(order_depth.buy_orders.items()))
-update_buy_order_history(buy_order_history, product, best_bid)
-
-# ...
-
-newData = []
-newData.append(sell_order_history)
-newData.append(buy_order_history)  # buy_order_history is included in traderData
-newData.append(current_positions)
-
-# String value holding Trader state data required. 
-# It will be delivered as TradingState.traderData on next execution.
-traderData = str(newData)
+        if acceptable_sell_price > current_mid_price:  # Selling
+            orders.append(Order(product_name, int(lowest_sell_order - 1), -(int(remaining_sell_capacity / 2))))
+        
+        elif acceptable_buy_price > highest_buy_order:  # Buying
+            orders.append(Order(product_name, int(highest_buy_order + 1), int(remaining_buy_capacity / 2)))
 ```
 
 #### These are the results of our Round 4 algorithm:
 
-![round_4_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_algorithm_results_1.gif)
-![round_4_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_algorithm_results_2.jpg)
+![round_4_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_algorithm_results_1.png)
+![round_4_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_4_algorithm_results_2.png)
 
-#### This was a very unexpected result on our end. Looking at the submission logs, we found the following warning:
-
-![round_4_algorithm_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_algorithm_results_3.jpg)
-
-#### We assumed that this warning was the main issue preventing our code from running in the final submission. Hence, we made an effort to fix this error in the next round. We were not aware, however, of another error that took place in our submission, which occurred later in the submission logs:
-
-![round_4_algorithm_results_4](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_4_algorithm_results_4.jpg)
+#### it is clear that we were lucky to have made any form of profit in this algorithm round. Although our algorithm did peak at around 20,000 XIRENs, our algorithm was unable to secure these profits, and it seemed that our profit would have easily also went the other way around into the negatives. From this, our algorithm still is not stable enough to be considered safe and steady in making profit.
 
 ### Manual Trading
 #### As mentioned in [Round 4 of the wiki](https://imc-prosperity.notion.site/Round-4-19ee8453a0938112aa5fd7f0d060ffe6), the manual trading challenge for Round 4 was a game of "Seal or No Seal", which was similar to the manual trading challenge for Round 2. In the challenge, a grid of suitcases was presented, with each suitcase containing a base amount of 10,000 SeaShells, a multiplier, and a predefined number of contestants we will need to share the SeaShells of the suitcase with. The final amount of SeaShells that will be awarded from a suitcase will also be influenced by the percentage of participants who pick that particular suitcase. We are able to choose up to 3 suitcases, with the first suitcase being free to pick, the second suitcase requiring an initial 50,000 SeaShell fee, and the third suitcase requiring an initial 100,000 SeaShell fee (if we remember correctly).
