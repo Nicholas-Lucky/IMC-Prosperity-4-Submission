@@ -1268,46 +1268,50 @@ def run_monte_carlo(self, starting_price):
 <summary><h2>Round 5 🕵️‍♀️</h2></summary>
 
 ### Algorithmic Trading
-#### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-19ee8453a0938154bd42d50839bbccee), Round 5 did not introduce any new tradable products. Instead, Round 5 introduced information on the counterparties we traded against, which the wiki mentioned can be found in the `OwnTrade` class.
+#### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-The-Final-Stretch-350e8453a09380dd9347cd078df13f4c), Round 5 removed all previous tradeable products, and introduced 50 new tradeable products. These 50 products are evenly divided into 10 categories (each category will have 5 products), each of which has their own behavior and volatility. Each product has a position limit of `10`. Our goal is to select the categories and products to trade, and make as much profit as we can. The available products are categories are the following:
 
-#### Due to time constraints, we did not develop a meaningful strategy that used the counterparty information. Instead, we attempted to refine our existing algorithm and fix the errors that prevented our code from running in the final submission. As mentioned in Round 4, an error that we encountered in our final submission log involved a `RuntimeWarning`, in which it seemed that NumPy's `mean()` function was being called on empty lists, presumably on the first iteration of the `Trader` class when our product and `observation_info_history` histories are initially empty. Hence, we decided to set variables that used NumPy's `mean()` function to `0` when the relevant lists are empty.
+- **Galaxy Sounds Recorders**: `GALAXY_SOUNDS_DARK_MATTER`, `GALAXY_SOUNDS_BLACK_HOLES`, `GALAXY_SOUNDS_PLANETARY_RINGS`, `GALAXY_SOUNDS_SOLAR_WINDS`, `GALAXY_SOUNDS_SOLAR_FLAMES`
+- **Vertical Sleeping Pods**: `SLEEP_POD_SUEDE`, `SLEEP_POD_LAMB_WOOL`, `SLEEP_POD_POLYESTER`, `SLEEP_POD_NYLON`, `SLEEP_POD_COTTON`
+- **Organic Microchips**: `MICROCHIP_CIRCLE`, `MICROCHIP_OVAL`, `MICROCHIP_SQUARE`, `MICROCHIP_RECTANGLE`, `MICROCHIP_TRIANGLE`
+- **Purification Pebbles**: `PEBBLES_XS`, `PEBBLES_S`, `PEBBLES_M`, `PEBBLES_L`, `PEBBLES_XL`
+- **Domestic Robots**: `ROBOT_VACUUMING`, `ROBOT_MOPPING`, `ROBOT_DISHES`, `ROBOT_LAUNDRY`, `ROBOT_IRONING`
+- **UV-Visors**: `UV_VISOR_YELLOW`, `UV_VISOR_AMBER`, `UV_VISOR_ORANGE`, `UV_VISOR_RED`, `UV_VISOR_MAGENTA`
+- **Instant Translators**: `TRANSLATOR_SPACE_GRAY`, `TRANSLATOR_ASTRO_BLACK`, `TRANSLATOR_ECLIPSE_CHARCOAL`, `TRANSLATOR_GRAPHITE_MIST`, `TRANSLATOR_VOID_BLUE`
+- **Construction Panels**: `PANEL_1X2`, `PANEL_2X2`, `PANEL_1X4`, `PANEL_2X4`, `PANEL_4X4`
+- **Liquid Breath Oxygen Shakes**: `OXYGEN_SHAKE_MORNING_BREATH`, `OXYGEN_SHAKE_EVENING_BREATH`, `OXYGEN_SHAKE_MINT`, `OXYGEN_SHAKE_CHOCOLATE`, `OXYGEN_SHAKE_GARLIC`
+- **Protein Snack Packs**: `SNACKPACK_CHOCOLATE`, `SNACKPACK_VANILLA` `SNACKPACK_PISTACHIO`, `SNACKPACK_STRAWBERRY`, `SNACKPACK_RASPBERRY`
 
-```python
-# In round_5.py
-# In the Macaron class
+#### Using the provided Data Capsule that allowed us to view historical prices of these products. We assumed that the products in a given category will have similar price behaviors, so, to save time, we decided to use one product from each category to represent their respective categories. Using the historical prices, we constructed the following price graphs of the products and their respective categories:
 
-self.historical_ask_price_mean = 0
-if len(observation_info_history["askPrice"]) > 0:
-    self.historical_ask_price_mean = mean(observation_info_history["askPrice"])
+#### Galaxy Sounds Recorders:
+![galaxy_sounds_recorders_historical_prices_day_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/galaxy_sounds_recorders_historical_prices_day_2.png)
 
-# ...
+#### Vertical Sleeping Pods:
+![vertical_sleeping_pods_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/vertical_sleeping_pods_historical_prices.png)
 
-self.historical_ask_price_std = 0
-if len(observation_info_history["askPrice"]) > 0:
-    self.historical_ask_price_std = std(observation_info_history["askPrice"])
-```
+#### Organic Microchips:
+![organic_microchips_historical_prices_day_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/organic_microchips_historical_prices_day_2.png)
 
-#### In addition, we adjusted our "crash detectors" to include both the `sell_order_history` and `buy_order_history` in their calculations, as opposed to only the `sell_order_history` previously, and slightly tweaked their thresholds. We hope that these changes could help make our "crash detectors" more stable and reasonable, especially as this change seems to have increased our overall profits in our submissions.
+#### Purification Pebbles:
+![purification_pebbles_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/purification_pebbles_historical_prices.png)
 
-```python
-# In round_5.py
+#### Domestic Robots:
+![domestic_robots_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/domestic_robots_historical_prices.png)
 
-def big_dip_checker(sell_order_history, buy_order_history, current_mid_price, multiplier):
-    sell_average = get_average(sell_order_history)
-    buy_average = get_average(buy_order_history)
-    mid_average_value = (sell_average + buy_average) / 2
+#### UV-Visors:
+![uv-visors_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/uv-visors_historical_prices.png)
 
-    return current_mid_price > (mid_average_value * multiplier)
+#### Instant Translators:
+![instant_translators_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/instant_translators_historical_prices.png)
 
-def small_dip_checker(sell_order_history, buy_order_history, recents_length, current_mid_price, multiplier):
-    # ...
+#### Construction Panels:
+![construction_panels_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/construction_panels_historical_prices.png)
 
-    mid_recents_average = (sell_recents_average + buy_recents_average) / 2
+#### Liquid Breath Oxygen Shakes:
+![liquid_breath_oxygen_shakes_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/liquid_breath_oxygen_shakes_historical_prices.png)
 
-    #print(f"recents_average: {recents_average}")
-
-    return current_mid_price > (mid_recents_average * multiplier)
-```
+#### Protein Snack Packs:
+![protein_snack_packs_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/protein_snack_packs_historical_prices.png)
 
 #### These are the results of our Round 5 algorithm:
 
