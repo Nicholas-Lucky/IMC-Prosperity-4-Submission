@@ -1265,7 +1265,7 @@ def run_monte_carlo(self, starting_price):
 
 ---
 <details>
-<summary><h2>Round 5 🍫</h2></summary>
+<summary><h2>Round 5 🌌</h2></summary>
 
 ### Algorithmic Trading
 #### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-The-Final-Stretch-350e8453a09380dd9347cd078df13f4c), Round 5 removed all previous tradeable products, and introduced 50 new tradeable products. These 50 products are evenly divided into 10 categories (each category will have 5 products), each of which has their own behavior and volatility. Each product has a position limit of `10`. Our goal is to select the categories and products to trade, and make as much profit as we can. The available products are categories are the following:
@@ -1587,8 +1587,8 @@ def get_scenario_3_sentiments_info():
 
 #### These are the results of our Round 5 manual trading challenge:
 
-![round_5_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_trading_results_1.png)
-![round_5_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_trading_results_2.png)
+![round_5_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_manual_trading_results_1.png)
+![round_5_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_manual_trading_results_2.png)
 
 #### ^^ Overall, it seems that we performed fine on some products (e.g., Lava Cake, Thermalite Core, Sulfur Reactor) and had room to improve on other products (mainly the Obsidian Cutlery). Given that we probably could have allocated more of our budget to some of our profiting products, however, alongside potentially buying Obsidian Cutlery instead of selling it, it is clear that we have room for improvement.
 
