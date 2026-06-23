@@ -1265,7 +1265,7 @@ def run_monte_carlo(self, starting_price):
 
 ---
 <details>
-<summary><h2>Round 5 🕵️‍♀️</h2></summary>
+<summary><h2>Round 5 🍫</h2></summary>
 
 ### Algorithmic Trading
 #### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-The-Final-Stretch-350e8453a09380dd9347cd078df13f4c), Round 5 removed all previous tradeable products, and introduced 50 new tradeable products. These 50 products are evenly divided into 10 categories (each category will have 5 products), each of which has their own behavior and volatility. Each product has a position limit of `10`. Our goal is to select the categories and products to trade, and make as much profit as we can. The available products are categories are the following:
