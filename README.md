@@ -1313,14 +1313,165 @@ def run_monte_carlo(self, starting_price):
 #### Protein Snack Packs:
 ![protein_snack_packs_historical_prices](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/protein_snack_packs_historical_prices.png)
 
+#### Due to time constraints, we were unfortunately not able to find a profitable strategy for every single product and category, however, we did make some simple strategies for trading products in the Protein Snack Packs, Purification Pebbles, and Galaxy Sounds Recorders categories.
+
+#### We started with the Protein Snack Packs category, as we noticed that the historical prices for this cateogry had a notable gap between the bid and ask prices, meaning that we could try doing market making with this category and potentially make reliable profit. We used a similar strategy for the Protein Snack Packs category (and the other two categories we traded) as we previously did for the `HYDROGEL_PACK`. For each product in the category (we applied the same strategy for each product in the category), we used its historical mid prices to calculate its fair value and EMA. We then used both its fair value and EMA in a weighted sum to calculate our thresholds to buy and sell. For this category, we found that this weighted sum was best when it consisted of 30% fair value and 70% EMA:
+
+```python
+# In round_5.py
+
+# In the Strategy class
+    
+    # In the trade_protein_snack_packs() function
+
+        # ...
+
+        fair_value = mean(recent_mid_prices)
+        
+        # ...
+
+        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask)
+        spread = abs(best_bid - best_ask)
+
+        # ...
+        
+        # 30% fair value and 70% ema seems like the sweet spot
+        adjusted_fair_value = (0.3 * fair_value) + (0.7 * ema)
+
+        acceptable_buy_price = int(adjusted_fair_value - (spread / 8))
+        acceptable_sell_price = int(adjusted_fair_value + (spread / 8))
+```
+
+#### We also took the current and recent historical mid prices into account when creating our conditions to buy and sell. For selling a product in the Protein Snack Packs category, we make sure that our acceptable sell price is greater than the current mid price. For buying a product in the Protein Snack Packs category, we make sure that our acceptable buy price is less than the current mid price, and we seem to currently be in a downward trend:
+
+```python
+# In round_5.py
+
+# In the Strategy class
+    
+    # In the trade_protein_snack_packs() function
+
+        # ...
+
+        # If we're not in a downward trend
+        more_recent_average = mean(mid_order_history[-10:])
+        less_recent_average = mean(mid_order_history[-20:])
+        
+        # ...
+
+        if acceptable_sell_price < best_ask and acceptable_sell_price > current_mid_price:  # Selling
+            amount_to_sell = min(buy_size, remaining_buy_capacity)
+            orders.append(Order(product_name, int(acceptable_sell_price), -amount_to_sell))
+
+        if acceptable_buy_price > best_bid and acceptable_buy_price < current_mid_price and more_recent_average > less_recent_average:  # Buying
+            amount_to_buy = min(buy_size, remaining_buy_capacity)
+            orders.append(Order(product_name, int(acceptable_buy_price), amount_to_buy))
+```
+
+#### We then moved onto the Purification Pebbles category, as we heard from the IMC Discord that this category might be worth looking into. The generally strategy we used for the Purification Pebbles category was the same as with the Protein Snack Packs category, with the main difference being that we used an alpha of `0.7` in our EMA (meaning that our EMA will be more considerate of the most recent historical price, and would hence be more reactive in general), and our weighted sum for our acceptable buy and sell prices considers EMA way more than the fair value. We also chose to not account for spread too much in this category, as the spread between the buy and sell orders seemed to overally be very small in the historical prices for this category.
+
+```python
+# In round_5.py
+
+# In the Strategy class
+    
+    # In the trade_pebbles() function
+
+        # ...
+
+        fair_value = mean(recent_mid_prices)
+        
+        # ...
+
+        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask, alpha=0.7)
+
+        # ...
+
+        # 10% fair value and 90% ema seems like the sweet spot
+        adjusted_fair_value = (0.1 * fair_value) + (0.9 * ema)
+```
+
+#### For buying and selling, we chose to only consider buying and selling products in the Purification Pebbles category if we are in an upward trend, and, otherwise, we try to place a buy or sell order (whichever is needed) to get our position back to 0. Ideally, this way, we can buy and sell products in the Purification Pebbles category during upward trends in the price, meaning it might be more likely for us to make profit, and, otherwise, we can safely secure the current profit we have by quickly buying or selling inventory to not have any diminishing values in inventory during downward trends.
+
+```python
+# In round_5.py
+
+# In the Strategy class
+    
+    # In the trade_pebbles() function
+
+        # ...
+
+        more_recent_average = mean(previous_EMAs[-5:])
+        less_recent_average = mean(previous_EMAs[-10:])
+        
+        # ...
+
+        # Only trade when we are in an upward trend
+        if more_recent_average > less_recent_average:
+            if acceptable_sell_price > current_mid_price:  # Selling
+                amount_to_sell = min(sell_size, remaining_sell_capacity)
+                orders.append(Order(product_name, int(acceptable_sell_price), -amount_to_sell))
+
+            if acceptable_buy_price > best_bid and acceptable_buy_price < current_mid_price:  # Buying
+                amount_to_buy = min(buy_size, remaining_buy_capacity)
+                orders.append(Order(product_name, int(acceptable_buy_price), amount_to_buy))
+        
+        # If we are in a downward trend, get our position to 0 as fast as possible
+        elif current_position_duplicate != 0:
+            orders.append(Order(product_name, int(current_mid_price), -current_position_duplicate))
+```
+
+#### Finally, we quickly made a strategy for trading products in the Galaxy Sounds Recorders category. This third strategy is very similar to the strategy used for the Purification Pebbles category, with the main difference being that we used an alpha of `0.2` for the EMA, and we considered the spread in our thresholds to buy and sell. We changed the alpha of the EMA to `0.2`, as the historical price graph of the Galaxy Sounds Recorders category (at least one of the products in the category) seemed to not be too volatile, and was instead driven by longer term upward and downward trends; as a result, a lower alpha for the EMA means that the EMA would consider historical prices more, and would hence be more holistic than reactive, and might potentially better identify the longer-term trends of the Galaxy Sounds Recorders category. We included spread in our buy and sell thresholds for this category, as the historical price graph of one of the products in the category did seem to have a small spread between the bid and ask prices, meaning that we could potentially do a bit of market-making with the products in this category:
+
+```python
+# In round_5.py
+
+# In the Strategy class
+    
+    # In the trade_galaxy_sounds() function
+
+        # ...
+
+        fair_value = mean(recent_mid_prices)
+        
+        # ...
+
+        ema = self.calculate_EMA(product_name, new_data, best_bid, best_ask, alpha=0.2)
+        spread = abs(best_bid - best_ask)
+        
+        # ...
+
+        more_recent_average = mean(previous_EMAs[-5:])
+        less_recent_average = mean(previous_EMAs[-10:])
+        
+        # 10% fair value and 90% ema seems like the sweet spot
+        adjusted_fair_value = (0.1 * fair_value) + (0.9 * ema)
+
+        acceptable_buy_price = int(adjusted_fair_value - (spread / 8))
+        acceptable_sell_price = int(adjusted_fair_value + (spread / 8))
+
+        # Only trade when we are in an upward trend
+        if more_recent_average > less_recent_average:
+            if acceptable_sell_price > current_mid_price:  # Selling
+                amount_to_sell = min(sell_size, remaining_sell_capacity)
+                orders.append(Order(product_name, int(acceptable_sell_price), -amount_to_sell))
+
+            if acceptable_buy_price > best_bid and acceptable_buy_price < current_mid_price:  # Buying
+                amount_to_buy = min(buy_size, remaining_buy_capacity)
+                orders.append(Order(product_name, int(acceptable_buy_price), amount_to_buy))
+        
+        # If we are in a downward trend, get our position to 0 as fast as possible
+        elif current_position_duplicate != 0:
+            orders.append(Order(product_name, int(current_mid_price), -current_position_duplicate))
+```
+
 #### These are the results of our Round 5 algorithm:
 
-![round_5_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_algorithm_results_1.gif)
-![round_5_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_algorithm_results_2.jpg)
+![round_5_algorithm_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_algorithm_results_1.png)
+![round_5_algorithm_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_algorithm_results_2.png)
 
-#### ^^ This, once again, was surprising to us, as we thought that the `RuntimeWarning` error was the sole reason for our algorithm previously not running. In hindsight, while the `RuntimeWarning` error no longer seems to be an issue in our algorithm, we did not end up fixing, or catching, another error in our algorithm, in which it seems that our algorithm would "time out". We currently have not implemented and tested possible fixes for this error, however, we suspect that this error might involve `observation_info_history` — as we may not have set a size limit for the history, causing the history to continuously append thousands of elements; this could explain why the algorithm did not seem to encounter errors during the first 4,000 iterations or so, as `observation_info_history` would have been smaller and easier to handle during these iterations.
-
-![round_5_algorithm_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_algorithm_results_3.jpg)
+#### ^^ Overall, while we definitely could have done better, we were glad that it seemed that our algorithm performed relatively well. The initial negative profit is definitely notable, as this could mean that our strategy for one or all of our products may not have been as safe as we thought, however we are curious as to how safe our algorithm generally was, and if there were any improvements to our current strategies (or through new strategies) we could have made.
 
 ### Manual Trading
 #### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-19ee8453a0938154bd42d50839bbccee), the manual trading challenge for Round 5 involves us trading in the West Archipelago exchange. Using an initial capital of 1,000,000 SeaShells, and information from the [Goldberg news source](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_5/goldberg_news_source.png), we needed to perform trades for an array of products: for each product, we needed to decide whether to buy or sell the product, and for what percentage of our initial capital. There is also a fee associated with each product we trade, which we found can be calculated using the following formula:
