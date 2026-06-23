@@ -1476,13 +1476,13 @@ def run_monte_carlo(self, starting_price):
 ### Manual Trading
 #### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-The-Final-Stretch-350e8453a09380dd9347cd078df13f4c), the manual trading challenge for Round 5 involves us trading on the Ignith exchange. Using an initial captial of 1,000,000 XIRENs, and information from the [Ashflow Alpha news source](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_5/ashflow_alpha_news_source.jpg), we need to perform trades for an array of products: for each product, we need to decide whether to buy or sell the product, and for what percentage of our initial capital. There is also a fee associated with each product we trade, which we found can be calculated using the following formula:
 
-#### $\text{Fee}=(\text{volume_for_a_specific_product} / 100) * (\text{volume_for_a_specific_product} / 100) * \text{budget}$
+#### Fee = (volume_for_a_specific_product / 100) * (volume_for_a_specific_product / 100) * budget
 #### ^^ With `budget` (I think) being the initial budget of 1,000,000 XIRENs, making the fee formula:
-#### $\text{Fee}=(\text{volume_for_a_specific_product} / 100) * (\text{volume_for_a_specific_product} / 100) * 1,000,000$
+#### Fee = (volume_for_a_specific_product / 100) * (volume_for_a_specific_product / 100) * 1,000,000
 
 #### ^^ For example, if we decided to buy Obsidian Cutlery for 1% of our initial capital, the associated fee for such a trade would be:
-#### $\text{Fee}=(1 / 100) * (1 / 100) * 1,000,000$
-#### $\text{Fee}=100\text{ XIRENs}$
+#### Fee = (1 / 100) * (1 / 100) * 1,000,000
+#### Fee = 100 XIRENs
 
 #### The goal of this manual trading challenge is to perform the correct trades (buys and sells) with the optimal percentages for these products, and secure as much profit from these trades as we can. The products we will be trading are provided as follows. It is worth noting that it seems that the Ashflow Alphs news source has a news section for each of the products to be traded.
 1. Obsidian Cutlery
