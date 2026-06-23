@@ -1499,20 +1499,98 @@ def run_monte_carlo(self, starting_price):
 
 #### This means that, if we suspect many teams to buy or sell heavily in a certain product, we should consider buying or selling the product in a greater allocation than we would initially assume to potentially achieve the optimal allocation for the product. This is very important to note, as, unfortunately, we interpreted this the other way around, and hence assumed that we needed to have "less heavy" allocations and buy and sell the products in a safer manner.
 
-#### We began this manual trading challenge by noting our reactions on how the events in the Goldberg news source will affect the listed products. We concluded that a train derailment will negatively affect Cacti Needle, discovered issues will significantly hurt Quantum Coffee, an acquisition could mean that we should buy Ranch sauce, increased costs might negatively affect Solar panels, it is unclear how a trip to space and scientific opinions will affect Moonshine, it is unlikely that rumors will affect Haystacks, there might be reason to buy Red Flags, changes in Striped Shirts will depend on the popularity and reputation of the Dalton Brothers, and growing popularity could indicate a need to buy VR Monocle unless the growth is too unsustainable. We then refined our trades with [round_5_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_5/round_5_manual_trading.py), which was heavily inspired by [Round5.ipynb](https://github.com/gabsens/IMC-Prosperity-2-Manual/blob/master/Round5.ipynb) in gabsens's IMC-Prosperity-2-Manual GitHub repository. In this file, we ended up using the optimal sentiments and sentiment multipliers from a similar manual trading challenge in last year's IMC Prosperity 2 competition, as we noticed that many of last year's products had similar associated stories as our products this year. From this assumption, our code yielded the following:
+#### We began this manual trading challenge by noting our reactions on how the events in the Ashflow Alpha news source will affect the listed products. Our initial conclusions were that the chemical assembly line breach could negatively affect Obsidian Cutlery, discontinuing the Pyroflex Cell Tax Cut might slightly negatively affect Pyroflex Cell, growing popularity could indicate a need to buy Thermalite Core, found health risks and lawsuits could heavily negatively affect Lava Cake, the introduction and anticipation of Magma Ink could indicate a small need to buy Magma Ink, the livestreamer's advocacy for Scoria Paste could either be indicate a small need to buy Scoria Paste (otherwise, we might not need to buy or sell Scoria Paste), the public outcry might negatively impact Ashes of the Phoenix, Whiff Nostralico's commentary (which we thought had a lot of uncertainty, and could even lead to a pump and dump scheme) seems too unclear to indicate a need to buy or sell Volcanic Incense, and official inclusion of Sulfur Reactor could indicate a need to buy Sulfur Reactor.
 
-![round_5_manual_code_output](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_code_output.jpg)
+#### We then refined our trades with [round_5_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_5/round_5_manual_trading.py), which was heavily inspired by [Round5.ipynb](https://github.com/gabsens/IMC-Prosperity-2-Manual/blob/master/Round5.ipynb) in gabsens's IMC-Prosperity-2-Manual GitHub repository, and our last year's [round_5_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_5/round_5_manual_trading.py) for IMC Prosperity 3. In this file, we ended up using two scenarios for the sentiments and sentiment multipliers of the products, both of which we derived from a combination of last year's IMC Prosperity 3 comeptition, the year before's IMC Prosperity 2 competition, and our own intuition in comparing this year's products with those of previous years; we noticed that many of previous years' products had similar associated stories as our products this year, with the main difference being that the news stories this year had extra information added or information removed in comparison with a similar story from a previous year.
+
+#### The following is our first scenario of sentiments and sentiment multipliers:
+
+```python
+# In round_5_manual_trading.py
+
+predicted_sentiments = {
+    'Obsidian cutlery': '----',
+    'Pyroflex cells': '--',
+    'Thermalite core': '++++',
+    'Lava cake': '-----',
+    'Magma ink': '++',
+    'Scoria paste': '+',
+    'Ashes of the Phoenix': '---',
+    'Volcanic incense': '-',
+    'Sulfur reactor': '++'
+}
+
+def get_scenario_1_sentiments_info():
+    sentiment_multipliers = {
+        '+++++': 0.5,
+        '++++': 0.22,
+        '+++': 0.15,
+        '++': 0.03,
+        '+': 0.002,
+        '-': -0.005,
+        '--': -0.08,
+        '---': -0.22,
+        '----': -0.4,
+        '-----': -0.65
+    }
+
+    return predicted_sentiments, sentiment_multipliers
+```
+
+#### ^^ From this assumption, our code yielded the following:
+
+![round_5_manual_trading_code_output_scenario_1_and_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_manual_trading_code_output_scenario_1_and_2.png)
+
+#### The following is our second scenario of sentiments and sentiment multipliers. It is worth noting that, in the code, `get_scenario_1_sentiments_info()` and `get_scenario_2_sentiments_info()` both yielded the same sentiment multipliers and are redundant. As a result, our second scenario is in `get_scenario_3_sentiments_info()`:
+
+```python
+# In round_5_manual_trading.py
+
+predicted_sentiments = {
+    'Obsidian cutlery': '----',
+    'Pyroflex cells': '--',
+    'Thermalite core': '++++',
+    'Lava cake': '-----',
+    'Magma ink': '++',
+    'Scoria paste': '+',
+    'Ashes of the Phoenix': '---',
+    'Volcanic incense': '-',
+    'Sulfur reactor': '++'
+}
+
+def get_scenario_3_sentiments_info():
+    sentiment_multipliers = {
+        '+++++': 0.4,
+        '++++': 0.20,
+        '+++': 0.14,
+        '++': 0.05,
+        '+': 0.002,
+        '-': -0.02,
+        '--': -0.08,
+        '---': -0.2,
+        '----': -0.4,
+        '-----': -0.60
+    }
+
+    return predicted_sentiments, sentiment_multipliers
+```
+
+#### ^^ From this assumption, our code yielded the following:
+
+![round_5_manual_trading_code_output_scenario_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_manual_trading_code_output_scenario_3.png)
+
+#### After examining our [round_5_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_5/round_5_manual_trading.py) output, and dicussing our intuition with the products in general, we decided to submit the following portfolio of trades:
+
+![round_5_manual_trading_submission](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/readme_embeds/round_5_manual_trading_submission.png)
+
+#### A notable aspect of our submission is that, given our potential misinterpretation of how the allocations of other teams will affect the optimal allocation of a product, we decided to intentionally lower our allocations for many products that we thought many teams would allocate heavily to. For example, we chose to reduce our allocation in Lava Cake from around a 25% sell to a 16% sell, and we reduced our allocation in Thermalite Core from around a 15% buy to a 7% buy.
 
 #### These are the results of our Round 5 manual trading challenge:
 
-![round_5_manual_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_results_1.gif)
-![round_5_manual_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_results_2.jpg)
+![round_5_manual_trading_results_1](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_trading_results_1.png)
+![round_5_manual_trading_results_2](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_trading_results_2.png)
 
-#### ^^ Overall, it seems that we performed well on some products (e.g., Cacti Needle, Red Flags, Quantum Coffee) and had room to improve on other products (e.g, Haystacks, Ranch sauce, Solar panels). This is supported by the optimal trades for the challenge provided by K_Tesla in the IMC Prosperity Discord server. It is worth noting that a positive percentage indicates that a buy is suggested, while a negative percentage indicates that a sell is suggested.
-
-![round_5_manual_results_3](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/readme_embeds/round_5_manual_results_3.png)
-
-#### ^^ Comparing our profits to the optimal profits, it is clear that we have room for improvement.
+#### ^^ Overall, it seems that we performed fine on some products (e.g., Lava Cake, Thermalite Core, Sulfur Reactor) and had room to improve on other products (mainly the Obsidian Cutlery). Given that we probably could have allocated more of our budget to some of our profiting products, however, alongside potentially buying Obsidian Cutlery instead of selling it, it is clear that we have room for improvement.
 
 </details>
 
