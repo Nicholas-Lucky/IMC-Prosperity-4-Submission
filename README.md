@@ -1474,23 +1474,30 @@ def run_monte_carlo(self, starting_price):
 #### ^^ Overall, while we definitely could have done better, we were glad that it seemed that our algorithm performed relatively well. The initial negative profit is definitely notable, as this could mean that our strategy for one or all of our products may not have been as safe as we thought, however we are curious as to how safe our algorithm generally was, and if there were any improvements to our current strategies (or through new strategies) we could have made.
 
 ### Manual Trading
-#### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-19ee8453a0938154bd42d50839bbccee), the manual trading challenge for Round 5 involves us trading in the West Archipelago exchange. Using an initial capital of 1,000,000 SeaShells, and information from the [Goldberg news source](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_5/goldberg_news_source.png), we needed to perform trades for an array of products: for each product, we needed to decide whether to buy or sell the product, and for what percentage of our initial capital. There is also a fee associated with each product we trade, which we found can be calculated using the following formula:
-#### $\text{Fee}=120*\text{Percentage of our Initial Capital Used}*100$
+#### As mentioned in [Round 5 of the wiki](https://imc-prosperity.notion.site/Round-5-The-Final-Stretch-350e8453a09380dd9347cd078df13f4c), the manual trading challenge for Round 5 involves us trading on the Ignith exchange. Using an initial captial of 1,000,000 XIRENs, and information from the ![Ashflow Alpha news source](https://github.com/Nicholas-Lucky/IMC-Prosperity-4-Submission/blob/main/round_5/ashflow_alpha_news_source.jpg), we need to perform trades for an array of products: for each product, we need to decide whether to buy or sell the product, and for what percentage of our initial capital. There is also a fee associated with each product we trade, which we found can be calculated using the following formula:
 
-#### ^^ For example, if we decided to buy Haystacks for 1% of our initial capital, the associated fee for such a trade would be:
-#### $\text{Fee}=120*(0.01*100)$
-#### $\text{Fee}=120\text{ SeaShells}$
+#### $\text{Fee}=(\text{volume_for_a_specific_product} / 100) * (\text{volume_for_a_specific_product} / 100) * \text{budget}
+#### ^^ With `budget` (I think) being the initial budget of 1,000,000 XIRENs, making the fee formula:
+#### $\text{Fee}=(\text{volume_for_a_specific_product} / 100) * (\text{volume_for_a_specific_product} / 100) * 1,000,000
 
-#### The goal of this manual trading challenge is to perform the correct trades (buys and sells) with the optimal percentages for these products, and secure as much profit from these trades as we can. The products we will be trading are provided as follows. It is worth noting that it seems that the Goldberg news source has a news section for each of the products to be traded.
-1. Haystacks
-2. Ranch sauce
-3. Cacti Needle
-4. Solar panels
-5. Red Flags
-6. VR Monocle
-7. Quantum Coffee
-8. Moonshine
-9. Striped Shirts
+#### ^^ For example, if we decided to buy Obsidian Cutlery for 1% of our initial capital, the associated fee for such a trade would be:
+#### $\text{Fee}=(1 / 100) * (1 / 100) * 1,000,000
+#### $\text{Fee}=100\text{XIRENs}$
+
+#### The goal of this manual trading challenge is to perform the correct trades (buys and sells) with the optimal percentages for these products, and secure as much profit from these trades as we can. The products we will be trading are provided as follows. It is worth noting that it seems that the Ashflow Alphs news source has a news section for each of the products to be traded.
+1. Obsidian Cutlery
+2. Pyroflex Cells
+3. Thermalite Core
+4. Lava Cake
+5. Magma Ink
+6. Scoria Paste
+7. Ashes of the Phoenix
+8. Volcanic Incense
+9. Sulfur Reactor
+
+#### It is also worth noting that the optimal allocations for each product is partially influenced by other teams. If I'm not wrong, for example, let's assume that IMC initially has the optimal allocation for Obsidian Cutlery to be a 10% buy. If, after the manual trading round ends, we find a lot of teams buying Obsidian Cutlery heavily, the optimal allocation for Obsidian Cutlery might move to a 15% or 20% buy (the change in magnitude is a guess for demonstration). On the other hand, if we find a lot of teams selling Obsidian Cutlery heavily, the optimal allocation for Obsidian Cutlery might move to a 5% buy instead.
+
+#### This means that, if we suspect many teams to buy or sell heavily in a certain product, we should consider buying or selling the product in a greater allocation than we would initially assume to potentially achieve the optimal allocation for the product. This is very important to note, as, unfortunately, we interpreted this the other way around, and hence assumed that we needed to have "less heavy" allocations and buy and sell the products in a safer manner.
 
 #### We began this manual trading challenge by noting our reactions on how the events in the Goldberg news source will affect the listed products. We concluded that a train derailment will negatively affect Cacti Needle, discovered issues will significantly hurt Quantum Coffee, an acquisition could mean that we should buy Ranch sauce, increased costs might negatively affect Solar panels, it is unclear how a trip to space and scientific opinions will affect Moonshine, it is unlikely that rumors will affect Haystacks, there might be reason to buy Red Flags, changes in Striped Shirts will depend on the popularity and reputation of the Dalton Brothers, and growing popularity could indicate a need to buy VR Monocle unless the growth is too unsustainable. We then refined our trades with [round_5_manual_trading.py](https://github.com/Nicholas-Lucky/IMC-Prosperity-3-Submission/blob/main/round_5/round_5_manual_trading.py), which was heavily inspired by [Round5.ipynb](https://github.com/gabsens/IMC-Prosperity-2-Manual/blob/master/Round5.ipynb) in gabsens's IMC-Prosperity-2-Manual GitHub repository. In this file, we ended up using the optimal sentiments and sentiment multipliers from a similar manual trading challenge in last year's IMC Prosperity 2 competition, as we noticed that many of last year's products had similar associated stories as our products this year. From this assumption, our code yielded the following:
 
